@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { CartProvider } from './context/CartContext.tsx';
 import { OrderProvider } from './context/OrderContext.tsx';
+import { CustomerNavigationShell } from './components/CustomerNavigationShell.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { OrdersPage } from './pages/OrdersPage.tsx';
 import { OrderDetailPage } from './pages/OrderDetailPage.tsx';
@@ -15,15 +16,17 @@ export default function App() {
         <CartProvider>
           <OrderProvider>
             <Routes>
-              {/* Home Page (Approved and Design-Locked) */}
-              <Route path="/" element={<HomePage />} />
+              {/* Coordinated spatial navigation shell across Home, Orders, Profile, and other screens */}
+              <Route element={<CustomerNavigationShell />}>
+                {/* Home Page (Approved and Design-Locked) */}
+                <Route path="/" element={<HomePage hideBottomNav />} />
 
-              {/* Phase 2: Order History Page (With Orders & Empty State) + Order Details */}
-              <Route path="/orders" element={<OrdersPage />} />
-              <Route path="/orders/:id" element={<OrderDetailPage />} />
+                {/* Phase 2: Order History Page (With Orders & Empty State) + Order Details */}
+                <Route path="/orders" element={<OrdersPage hideBottomNav />} />
+                <Route path="/orders/:id" element={<OrderDetailPage />} />
 
-              {/* Phase 3: Approved Profile Page */}
-              <Route path="/profile" element={<ProfilePage />} />
+                {/* Phase 3: Approved Profile Page (Rendered within spatial transition stage) */}
+                <Route path="/profile" element={<ProfilePage hideFloatingHomePill />} />
 
               {/* Minimal Functional Placeholders for Pending Screens */}
               <Route
@@ -66,7 +69,8 @@ export default function App() {
                 path="*"
                 element={<PlaceholderPage title="Page Not Found" description="The requested screen does not exist." />}
               />
-            </Routes>
+            </Route>
+          </Routes>
           </OrderProvider>
         </CartProvider>
       </AuthProvider>

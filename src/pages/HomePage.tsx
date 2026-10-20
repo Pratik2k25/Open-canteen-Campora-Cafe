@@ -28,7 +28,11 @@ import {
 } from '../utils/vegModeTransition.ts';
 import type { MenuItem } from '../types/index.ts';
 
-export const HomePage: React.FC = () => {
+interface HomePageProps {
+  hideBottomNav?: boolean;
+}
+
+export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => {
   const { serviceMode } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -245,7 +249,7 @@ export const HomePage: React.FC = () => {
         <FloatingCart />
 
         {/* Custom Approved Bottom Navigation */}
-        <BottomNavigation />
+        {!hideBottomNav && <BottomNavigation />}
 
         {/* Dedicated Phase 5 Full-Screen VEG Mode Circular Reveal Overlay */}
         <VegModeTransitionOverlay

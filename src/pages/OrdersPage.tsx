@@ -12,7 +12,11 @@ import {
   type OrderHistoryTab,
 } from '../utils/orderHistory.ts';
 
-export const OrdersPage: React.FC = () => {
+interface OrdersPageProps {
+  hideBottomNav?: boolean;
+}
+
+export const OrdersPage: React.FC<OrdersPageProps> = ({ hideBottomNav = false }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { orders } = useOrders();
@@ -215,7 +219,7 @@ export const OrdersPage: React.FC = () => {
         </main>
 
         {/* 5. BOTTOM NAVIGATION */}
-        <BottomNavigation />
+        {!hideBottomNav && <BottomNavigation />}
       </div>
     </div>
   );

@@ -25,7 +25,17 @@ type ActiveSheet =
 
 const STORAGE_KEY = 'campora_mock_profile_v1';
 
-export const ProfilePage: React.FC = () => {
+interface ProfilePageProps {
+  onHeaderBack?: () => void;
+  onHomeClick?: () => void;
+  hideFloatingHomePill?: boolean;
+}
+
+export const ProfilePage: React.FC<ProfilePageProps> = ({
+  onHeaderBack,
+  onHomeClick,
+  hideFloatingHomePill = false,
+}) => {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<CustomerProfileData>(() => {
@@ -138,7 +148,13 @@ export const ProfilePage: React.FC = () => {
         <header className="px-4 pt-3.5 pb-2.5 flex items-center gap-3.5 bg-[#F5F8FB]">
           <button
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => {
+              if (onHeaderBack) {
+                onHeaderBack();
+              } else {
+                navigate('/');
+              }
+            }}
             aria-label="Go back"
             className="w-8 h-8 -ml-1 rounded-full flex items-center justify-center text-[#1E2432] hover:bg-black/5 active:scale-95 transition-all cursor-pointer"
           >
@@ -689,29 +705,37 @@ export const ProfilePage: React.FC = () => {
         </main>
 
         {/* 7. DEDICATED BOTTOM-LEFT CORAL FLOATING "<- Home" PILL BUTTON */}
-        <div className="fixed bottom-4 left-0 right-0 z-30 pointer-events-none flex justify-center">
-          <div className="w-full max-w-[430px] flex justify-start pointer-events-auto">
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              aria-label="Back to Home"
-              className="bg-[#F05360] hover:bg-[#E14552] active:scale-[0.98] text-white rounded-l-none rounded-r-full pl-3.5 pr-5 py-2.5 flex items-center gap-2 shadow-[0_4px_14px_rgba(240,83,96,0.38)] transition-all cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] shrink-0" fill="none">
-                <path
-                  d="M19 12H5M11 6l-6 6 6 6"
-                  stroke="#FFFFFF"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="text-[14.5px] font-semibold tracking-tight leading-none">
-                Home
-              </span>
-            </button>
+        {!hideFloatingHomePill && (
+          <div className="fixed bottom-4 left-0 right-0 z-30 pointer-events-none flex justify-center">
+            <div className="w-full max-w-[430px] flex justify-start pointer-events-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  if (onHomeClick) {
+                    onHomeClick();
+                  } else {
+                    navigate('/');
+                  }
+                }}
+                aria-label="Back to Home"
+                className="bg-[#F05360] hover:bg-[#E14552] active:scale-[0.98] text-white rounded-l-none rounded-r-full pl-3.5 pr-5 py-2.5 flex items-center gap-2 shadow-[0_4px_14px_rgba(240,83,96,0.38)] transition-all cursor-pointer"
+              >
+                <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] shrink-0" fill="none">
+                  <path
+                    d="M19 12H5M11 6l-6 6 6 6"
+                    stroke="#FFFFFF"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="text-[14.5px] font-semibold tracking-tight leading-none">
+                  Home
+                </span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* SUBTLE FEEDBACK TOAST */}
         {statusToast && (
