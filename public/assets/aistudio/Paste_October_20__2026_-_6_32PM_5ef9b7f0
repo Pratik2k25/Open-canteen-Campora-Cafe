@@ -1,0 +1,1087 @@
+# CAMPORA CAFÉ — MASTER IMPLEMENTATION PROMPT
+## PHASE 6: PREMIUM NAVIGATION, GLOSSY 3D ICONS & SPATIAL PAGE TRANSITIONS
+### Google AI Studio | React + TypeScript | Android PWA
+
+# 1. YOUR ROLE AND MISSION
+
+Act as a senior frontend animation engineer, UI/UX implementation specialist, React/TypeScript developer, and Android PWA performance expert.
+
+You are continuing development of our existing Campora Café application.
+
+Your mission is to reproduce the premium navigation styling and motion demonstrated in the attached Zomato reference screenshots and screen recording.
+
+**IMPORTANT: Copy the interaction quality and motion principles, NOT Zomato's actual layout, branding, or application content.**
+
+Campora Café already has a custom-designed navigation system and approved pages.
+
+Preserve them.
+
+This is a targeted navigation enhancement, not an application redesign.
+
+The implementation must cover:
+
+1. High-quality glossy 3D navigation icons.
+2. White labels for selected Home/Order buttons.
+3. Smooth sliding charcoal indicator between Home and Order.
+4. Coordinated icon-state animations.
+5. Full horizontal Home-to-Profile page transition.
+6. Reverse Profile-to-Home page transition.
+7. The approved left-edge floating Home pill moving together with the Profile screen.
+
+The result should feel fluid, continuous, premium, and native-app-like.
+
+---
+
+# 2. PROVIDED DESIGN REFERENCES
+
+I am attaching:
+
+**REFERENCE A — Zomato Navigation Screenshots**
+
+Demonstrates:
+
+- Dark charcoal selected pill.
+- White selected text.
+- Colored glossy 3D icon.
+- Dark-outline inactive icon.
+- Rounded white navigation background.
+- Animated selected position.
+
+**REFERENCE B — Zomato Navigation Screen Recording**
+
+This is the PRIMARY MOTION REFERENCE.
+
+Observe carefully:
+
+- Delivery ↔ History switching.
+- Sliding selected pill.
+- Glossy icon changes.
+- Entering Dining from the right.
+- Exiting Dining toward the right.
+- Return button movement.
+- Navigation visibility during transitions.
+- Timing, easing, overlap, and perceived depth.
+
+**REFERENCE C — Campora Café Home Page**
+
+This is our approved and design-locked Home Page Case 3.
+
+**REFERENCE D — Campora Café Order History**
+
+This is our approved Order page.
+
+**REFERENCE E — Campora Café Profile Page**
+
+This is our final approved Profile design with its left-edge coral Home pill and NO bottom navigation.
+
+## Design priority
+
+For page layouts, sizes, proportions, brand styling, and content:
+
+**Campora Café references take priority.**
+
+For navigation motion, active/inactive icon treatment, and transition feel:
+
+**Zomato video takes priority, adapted to our existing structure.**
+
+Do not redesign any approved screen.
+
+---
+
+# 3. EXISTING PROJECT CONTEXT
+
+The project already includes:
+
+- React and TypeScript.
+- An existing application router.
+- Firebase infrastructure.
+- Android PWA configuration.
+- Approved Home Case 3 theme system.
+- Three organic service tabs: Dinein, Takeaway, Delivery.
+- Food category carousel and filtering.
+- Approved VEG Mode interaction architecture.
+- Floating-cart system with dynamic food and beverages.
+- Order History and Order Details.
+- Approved Profile page.
+- Existing custom bottom navigation.
+
+Inspect the actual source code before changing it.
+
+Use existing libraries and components where practical.
+
+Do not scaffold a new project.
+
+Do not reinitialize Firebase.
+
+Do not create a new navigation design from scratch when existing components can be upgraded.
+
+---
+
+# 4. LOCKED CAMPORA BOTTOM NAVIGATION GEOMETRY
+
+Our Home and Order pages use a custom bottom navigation.
+
+It contains:
+
+### GROUP A — Joined Home + Order container
+
+A single continuous rounded white outer pill containing:
+
+- Home button.
+- Order button.
+
+Only one button is active at a time.
+
+The active area is a dark charcoal rounded inner pill.
+
+### GROUP B — Separate Profile pill
+
+Positioned to the right of Group A.
+
+Characteristics:
+
+- White surface.
+- Purple icon and text.
+- Visible physical gap from the Home/Order container.
+- Right end extends to or slightly beyond the right viewport edge, matching our approved screenshot.
+- Not part of the Home/Order active-indicator slider.
+
+### Strict preservation
+
+Do not change:
+
+- Outer pill dimensions.
+- Inner pill dimensions.
+- Bottom position.
+- Gap between the two groups.
+- White backgrounds.
+- Corner radii.
+- Navigation shadows.
+- Icon/text alignment.
+- Right-edge treatment of Profile.
+- Original labels: Home, Order, Profile.
+
+The only authorized visual changes are the approved icon and selected-label upgrades.
+
+Do not create a standard three-equal-tab navigation bar.
+
+Do not merge Profile into the Home/Order container.
+
+---
+
+# 5. GLOSSY 3D ICON SYSTEM
+
+Replace the flat selected-state navigation icons with premium photorealistic 3D-looking assets.
+
+The Zomato reference uses miniature physical-looking objects, not basic recolored vector icons.
+
+We want the same material quality.
+
+## 5.1 Home icon
+
+### Active state
+
+- Recognizable miniature house.
+- Campora coral/orange primary color.
+- Smooth glossy material.
+- Realistic specular highlights.
+- Slight physical depth.
+- Soft ambient shading.
+- Clean silhouette at small sizes.
+
+### Inactive state
+
+- Existing dark charcoal outline house icon.
+- Simple, flat, clean presentation.
+- No glossy 3D treatment.
+
+## 5.2 Order icon
+
+### Active state
+
+- Miniature 3D takeaway/order bag.
+- Warm amber-orange material.
+- Recognizable folds and depth.
+- Realistic lighting and highlights.
+- Compact silhouette.
+- Premium three-dimensional appearance.
+
+The icon should communicate order history/food ordering while preserving the label **Order**.
+
+### Inactive state
+
+- Existing dark outline order/bag icon.
+- No colored 3D effect.
+
+## 5.3 Profile icon
+
+### Profile pill on Home/Order pages
+
+- Miniature glossy purple 3D person/avatar icon.
+- Rounded sculpted appearance.
+- Realistic soft highlights and shadows.
+- Preserve original purple Profile text.
+- Preserve the separate white pill.
+
+Do not place the Profile icon inside the Home/Order selected indicator.
+
+The Profile page itself does not display the three-button navigation.
+
+## Asset requirements
+
+Prefer actual transparent PNG/WebP assets rendered from a consistent 3D icon style.
+
+Recommended:
+
+```text
+public/assets/navigation/
+  home-active-3d.webp
+  order-active-3d.webp
+  profile-3d.webp
+```
+
+Maintain consistent:
+
+- Camera perspective.
+- Lighting direction.
+- Material quality.
+- Visual weight.
+- Scale.
+- Padding.
+- Shadow treatment.
+
+The icons should look like members of a single professionally designed asset family.
+
+### Critical asset rule
+
+A flat SVG with a gradient is not automatically equivalent to a realistic 3D icon.
+
+If suitable glossy assets are not already in the project, use available asset-generation capabilities to create them, or clearly identify them as required external assets.
+
+Do not falsely claim a 3D match when only flat placeholders are rendered.
+
+Do not pull unrelated emoji images or low-resolution icons from random sources.
+
+Optimize final assets for Android mobile.
+
+---
+
+# 6. ACTIVE AND INACTIVE COLORS
+
+## Home selected
+
+- Selected pill background: dark charcoal, matching current design.
+- Selected Home icon: glossy coral 3D.
+- Selected Home text: WHITE.
+- Order icon: dark outline.
+- Order text: dark charcoal.
+- Profile: approved purple style.
+
+## Order selected
+
+- Selected pill background: dark charcoal.
+- Selected Order icon: glossy amber/orange 3D.
+- Selected Order text: WHITE.
+- Home icon: dark outline.
+- Home text: dark charcoal.
+- Profile: approved purple style.
+
+### Important change
+
+Previously, our selected icon AND label were coral.
+
+Now:
+
+**Selected icon = colorful glossy 3D.**
+
+**Selected text = white.**
+
+Never make the selected label coral.
+
+Do not recolor the dark selected pill.
+
+---
+
+# 7. HOME ↔ ORDER — SLIDING SELECTION INDICATOR
+
+This is the first main animation.
+
+The customer switches between Home and Order.
+
+The outer white navigation container must remain fixed.
+
+The dark charcoal selected pill must smoothly travel between the Home and Order positions.
+
+## Home → Order
+
+1. User taps Order.
+2. Dark charcoal indicator begins moving horizontally from Home to Order.
+3. Home's glossy 3D icon transitions to its inactive outline version.
+4. Home label transitions from white to dark charcoal.
+5. Order's outline icon transitions to the glossy amber 3D version.
+6. Order label transitions from dark charcoal to white.
+7. Indicator settles into the exact approved Order position.
+8. `/orders` becomes the active route.
+
+## Order → Home
+
+Reverse the same motion.
+
+The active indicator slides from Order to Home.
+
+The icons and labels exchange active/inactive styles.
+
+## Animation specifications
+
+Starting targets:
+
+- Indicator slide: 250–350 ms.
+- Icon visual transition: approximately 180–250 ms.
+- Text-color transition: approximately 150–220 ms.
+
+Tune the values by reviewing the attached Zomato recording.
+
+### Technical requirements
+
+Use one shared animated indicator, not two disconnected active backgrounds that crossfade.
+
+The indicator must:
+
+- Slide smoothly.
+- Maintain its height.
+- Maintain its radius.
+- Fit the approved button positions.
+- Avoid stretching unnecessarily.
+- Never overflow the white navigation container.
+
+Animate using transforms where possible.
+
+Prefer a spring-like ease with minimal overshoot, not exaggerated bouncing.
+
+### Important
+
+Do not allow the entire navigation bar to unmount and remount during Home ↔ Order switching.
+
+The selected indicator needs visual continuity.
+
+Keep a persistent navigation shell or shared layout system.
+
+---
+
+# 8. PROFILE NAVIGATION — FUNDAMENTALLY DIFFERENT
+
+Profile is NOT a normal third tab in the joined Home/Order container.
+
+Our approved Profile screen has its own navigation behavior.
+
+On `/profile`:
+
+- No joined Home/Order navigation pill.
+- No standalone Profile bottom pill.
+- No conventional bottom navigation.
+- Only the approved Profile header, content, and coral edge-attached Home shortcut.
+
+The transition to Profile must be a full-page spatial movement.
+
+It should feel like entering an adjacent page positioned to the right of Home.
+
+This behavior is inspired by Zomato's transition into Dining.
+
+---
+
+# 9. HOME → PROFILE — FULL HORIZONTAL PAGE TRANSITION
+
+This is the most important animation in this task.
+
+## User action
+
+Customer taps the separate Profile button on the Home page.
+
+## Desired animation
+
+1. Profile navigation is activated.
+2. The current Home screen begins translating toward the LEFT.
+3. The Profile page simultaneously enters from the RIGHT.
+4. Both screens move in a coordinated horizontal transition.
+5. The Profile page fills the viewport.
+6. Home disappears from view.
+7. The conventional bottom navigation leaves with the Home screen.
+8. The approved coral Home pill is visible on the Profile screen.
+
+### Core requirement
+
+**Animate the entire page surfaces, not only their content cards.**
+
+Do not simulate this with a simple fade-in.
+
+Do not slide the page upward.
+
+Do not suddenly swap DOM content without movement.
+
+Do not use a generic modal animation.
+
+The direction must make it visually clear that Profile is located to the RIGHT of Home.
+
+## Timing
+
+Starting target:
+
+350–450 ms.
+
+Use smooth easing inspired by the reference video.
+
+Avoid noticeable pauses or empty frames.
+
+---
+
+# 10. PROFILE PAGE — APPROVED FLOATING HOME PILL
+
+The Profile page's floating Home button has already been designed, corrected several times, and finally approved.
+
+Its exact approved characteristics are:
+
+- Coral-red surface.
+- White left-arrow icon.
+- White Home label.
+- Left edge aligned with the inside-left screen boundary.
+- Rounded right end.
+- Fixed vertical position near the lower-left area.
+- Soft shadow.
+- Entirely inside the mobile application viewport.
+- No bottom navigation below it.
+
+**Do not redesign or reposition this control.**
+
+## Very important: OPTION 2 IS APPROVED
+
+We deliberately selected the second transition approach:
+
+**The coral Home pill moves together with the entire Profile page during navigation.**
+
+It must NOT animate separately after the page finishes sliding.
+
+### Correct approach
+
+Treat the floating Home pill as part of the Profile page's visual coordinate system.
+
+When the Profile page enters from the right, its Home pill travels with the page.
+
+When the Profile page exits toward the right, its Home pill travels out with the page.
+
+### Scrolling versus navigation
+
+There are two different behaviors:
+
+**When scrolling within Profile:**
+
+The Home pill remains fixed in the visible Profile viewport.
+
+**When transitioning between Profile and Home:**
+
+The Home pill moves along with the entire Profile page.
+
+Implement these behaviors without conflicting CSS transforms or incorrect fixed positioning.
+
+A suitable architecture is a full-viewport Profile transition shell containing a scrollable content region and a viewport-anchored Home pill.
+
+Animate the outer shell as one unit.
+
+Do not place the Home pill inside the scrolling content.
+
+Do not anchor it to the global window in a way that leaves it behind during page movement.
+
+---
+
+# 11. PROFILE → HOME — REVERSE HORIZONTAL TRANSITION
+
+When the customer taps the coral Home pill:
+
+1. Profile begins moving toward the RIGHT.
+2. The coral Home pill travels together with Profile.
+3. Home enters from the LEFT.
+4. The original Campora Café navigation returns with Home selected.
+5. Profile exits to the right.
+6. Home fully occupies the viewport.
+7. The animation finishes with no layout jump.
+
+### Important
+
+The return animation must be the spatial reverse of Home → Profile.
+
+Do not fade Profile out independently.
+
+Do not snap Home into place halfway through the transition.
+
+The Home page should look exactly as it did before the transition, subject to normal current state changes.
+
+Preserve:
+
+- Selected service mode.
+- VEG preference.
+- Category/filter state where retained by the existing app.
+- Cart contents.
+- Floating-cart artwork.
+- Item quantities.
+- Existing user context.
+
+Do not reset the Home page during navigation.
+
+---
+
+# 12. ORDER → PROFILE & OTHER NAVIGATION CASES
+
+The Profile pill also appears in the approved Order History navigation.
+
+If the customer opens Profile from Order:
+
+- Use the same rightward-entry Profile transition.
+- Move the outgoing Order screen left.
+- Do not display a bottom navigation on Profile.
+- Preserve the current Orders view state where practical.
+
+If the customer taps the Profile page's coral **Home** shortcut:
+
+- Always navigate to Home, as defined by its label.
+- Use the approved Profile → Home reverse transition.
+
+If the customer uses the Profile header back arrow:
+
+- Return to the appropriate previous route using the application's navigation history.
+- Use the corresponding reverse slide.
+- Fall back to Home when there is no meaningful in-app history.
+
+Do not make the Home shortcut unexpectedly return to Order.
+
+### Android browser back
+
+Back-navigation behavior must remain correct.
+
+If Profile was opened from Home, Android/browser Back should return to Home with the reverse transition.
+
+If Profile was opened from Order, Back should return to Order where appropriate.
+
+Do not break the browser history stack to make the animation work.
+
+---
+
+# 13. PAGE TRANSITION ARCHITECTURE
+
+Use a maintainable shared route-transition system.
+
+Suggested conceptual structure:
+
+```text
+App
+ └── CustomerNavigationShell
+      ├── MainPageTransitionViewport
+      │    ├── HomePage
+      │    ├── OrderHistoryPage
+      │    └── ProfilePageShell
+      │         ├── ProfileScrollableContent
+      │         └── FixedProfileHomePill
+      └── NavigationTransitionController
+```
+
+Adapt to the actual router and layout architecture.
+
+### Technical guidance
+
+- Use the existing router.
+- Use Framer Motion/Motion if already installed and appropriate.
+- Otherwise use efficient CSS transforms and a well-defined transition state machine.
+- Keep both outgoing and incoming page surfaces mounted for the transition duration.
+- Render them within a clipped viewport-width transition stage.
+- Keep navigation layering coordinated.
+- Restore normal event handling and scrolling after completion.
+- Prevent stale transitions from overriding new route state.
+
+Do not implement this as a fragile collection of arbitrary timeout callbacks.
+
+### Visual positioning
+
+The outgoing and incoming pages must be properly aligned.
+
+For an entry from the right, use viewport-based horizontal positions, not guessed pixel offsets.
+
+Example concept:
+
+```text
+HOME → PROFILE
+
+Initial:
+[ HOME ]
+          [ PROFILE outside right ]
+
+During:
+[ HOME moving left ][ PROFILE moving left ]
+
+Final:
+[ PROFILE ]
+```
+
+And reverse for returning Home.
+
+These diagrams explain motion direction; follow the actual reference video for visual refinement.
+
+---
+
+# 14. COORDINATING NAVIGATION VISIBILITY
+
+During Home ↔ Order:
+
+- Joined Home/Order navigation stays visible.
+- Dark active indicator slides.
+- Profile pill stays separate.
+
+During Home/Order → Profile:
+
+- Outgoing main navigation travels away with the outgoing page or otherwise transitions seamlessly as part of the outgoing surface.
+- Profile Home pill travels in with the incoming Profile surface.
+- Avoid showing both sets of navigation controls as static overlays.
+
+During Profile → Home/Order:
+
+- The main navigation re-enters with its associated page.
+- The Profile Home pill exits with Profile.
+
+Avoid:
+
+- Sudden nav disappearance before the page starts moving.
+- Floating navigation elements left behind.
+- Two stationary navigation bars overlaid on one another.
+- Flickering or mismatched safe-area positions.
+
+---
+
+# 15. ICON TRANSITION DETAILS
+
+A selected glossy 3D icon should appear smoothly and coherently.
+
+Suggested implementation:
+
+- Keep active and inactive icon variants aligned to the same center.
+- Crossfade or subtly scale between variants.
+- Use a small 0.96 → 1.0 scale animation for newly active 3D icons if suitable.
+- Avoid visible jumps in width or height.
+- Avoid changing button padding.
+- Avoid shifting text baselines.
+- Avoid excessive rotation or cartoon bouncing.
+
+The icon transition must feel subordinate to the sliding indicator.
+
+When the active background reaches the new tab, the icon and white label should already be visually coordinated.
+
+Use stable image dimensions and preload active 3D assets.
+
+---
+
+# 16. ABSOLUTELY NO PAGE REDESIGN
+
+Do not change the visual content of:
+
+### Home
+
+- Header.
+- Location selector.
+- Mountain service selector.
+- Case 3 dynamic colors.
+- Search and VEG controls.
+- Categories.
+- Filters.
+- Food cards.
+- Dynamic floating cart.
+
+### Order History
+
+- Header.
+- My Orders banner.
+- All Orders/Cancelled tabs.
+- Order cards.
+- Order statuses.
+- Order Details navigation.
+
+### Profile
+
+- Minimal header.
+- Lavender identity card.
+- Your Orders / Help & Support quick actions.
+- Preferences.
+- Your Information.
+- More section.
+- Coral left-edge Home pill.
+
+The only approved alterations are the navigation styling, glossy icon assets, and transition behavior described here.
+
+Also preserve the existing VEG Mode transition and other completed animations.
+
+---
+
+# 17. MOBILE VIEWPORT AND SAFE AREA
+
+Primary viewport:
+
+**390 × 844 Android mobile**
+
+Also test:
+
+- 360 × 800.
+- 375 × 812.
+- 412 × 915.
+- 430px-wide mobile viewport.
+
+### Requirements
+
+- Navigation stays at the approved bottom height.
+- Profile Home pill stays at the approved relative bottom height.
+- Safe-area insets are respected.
+- Right-edge Profile pill preserves its approved cropped/attached appearance.
+- No unintended horizontal scrollbar.
+- Sliding pages do not reveal white gaps.
+- Main content doesn't jump vertically.
+- Fixed elements move with the correct page transition shell.
+- Taps are not accidentally sent to the outgoing page.
+- Transition doesn't leave the screen horizontally offset.
+
+Do not change the existing page layout merely to simplify the animation.
+
+---
+
+# 18. PERFORMANCE, ACCESSIBILITY AND ROBUSTNESS
+
+This is an Android-first PWA.
+
+Use efficient transforms and opacity for animation where possible.
+
+Avoid expensive repeated layout measurements, unnecessary DOM remounts, and heavy 3D runtimes.
+
+### Reduced motion
+
+Respect `prefers-reduced-motion`.
+
+When enabled:
+
+- Navigation still works.
+- Route changes use a short fade or immediate transition.
+- No large horizontal motion is forced.
+
+### Rapid tapping
+
+Handle users tapping navigation buttons repeatedly.
+
+- Never leave two route transitions running indefinitely.
+- Never render a blank screen.
+- Do not navigate twice accidentally.
+- Do not corrupt browser history.
+- Do not leave the sliding indicator at the wrong tab.
+- Ensure the final active state matches the actual route.
+
+### Keyboard and screen readers
+
+Use semantic links or buttons as appropriate.
+
+Expose active navigation state using `aria-current="page"` for relevant destinations.
+
+Use correct accessible names for Home, Order, Profile, and the Profile Home shortcut.
+
+Manage focus after navigation completes.
+
+---
+
+# 19. FIREBASE AND DATA-SOURCE SAFETY
+
+This task is frontend navigation and animation only.
+
+Do not:
+
+- Recreate Firebase.
+- Change Firestore collections.
+- Modify order data.
+- Insert sample users.
+- Modify authentication providers.
+- Change checkout or cart business logic.
+- Change data providers.
+- Rebuild customer account management.
+
+Preserve the application's UI-first development architecture and isolated mock data.
+
+Do not introduce any Firebase production writes as part of animation testing.
+
+---
+
+# 20. IMPLEMENTATION PLAN
+
+## STEP 1 — Inspect existing navigation
+
+Identify:
+
+- BottomNavigation component.
+- Home/Order route handling.
+- Profile route.
+- Existing Profile Home pill.
+- Current active-state styling.
+- Shared layout architecture.
+- Installed motion libraries.
+
+## STEP 2 — Preserve approved geometry
+
+Capture the existing Home and Order navigation at 390px.
+
+Keep a baseline screenshot for comparison.
+
+Do the same for the Profile page.
+
+## STEP 3 — Prepare 3D icon assets
+
+Create or import the approved glossy icon variants.
+
+Verify transparency, alignment, style consistency, and mobile-size readability.
+
+If suitable high-fidelity 3D artwork is not available, report it explicitly instead of passing off flat icons as finished assets.
+
+## STEP 4 — Upgrade Home/Order styling
+
+Set:
+
+- Active label white.
+- Active glossy icon.
+- Inactive outline icon.
+- Existing charcoal indicator.
+- Existing white outer container.
+
+## STEP 5 — Implement sliding active pill
+
+Create the shared indicator animation.
+
+Test both directions without unmounting the navigation shell.
+
+## STEP 6 — Implement Profile entry transition
+
+Coordinate outgoing Home/Order and incoming Profile surfaces.
+
+Move the Profile Home pill together with the Profile screen.
+
+## STEP 7 — Implement return transition
+
+Reverse the page motion for Profile → Home and appropriate back navigation.
+
+## STEP 8 — Test navigation and regression
+
+Check rendering, motion, browser history, cart-state preservation, VEG preference, responsive behavior, and reduced motion.
+
+## STEP 9 — Compare against references
+
+Review actual recorded motion beside the Zomato reference.
+
+Tune icon scale, easing, and timing without changing locked page geometry.
+
+---
+
+# 21. MANDATORY TEST SCENARIOS
+
+### TEST A — Home selected
+
+Expected:
+
+- Dark active Home pill.
+- Glossy coral Home icon.
+- White Home text.
+- Order inactive with dark outline icon/text.
+- Separate purple Profile pill.
+
+### TEST B — Home → Order
+
+Expected:
+
+- Dark pill slides right.
+- Active glossy icon changes from Home to Order.
+- Order text turns white.
+- Home becomes inactive.
+- Correct Order page appears.
+
+### TEST C — Order → Home
+
+Expected:
+
+- Reverse sliding indicator.
+- Glossy Home icon becomes active.
+- Correct Home page appears.
+- No navigation flash.
+
+### TEST D — Home → Profile
+
+Expected:
+
+- Home moves left.
+- Profile enters from right.
+- Profile Home pill travels with Profile.
+- No bottom navigation on Profile.
+
+### TEST E — Profile → Home
+
+Expected:
+
+- Profile moves right.
+- Home enters from left.
+- Coral Home pill exits with Profile.
+- Home bottom navigation returns in the correct active state.
+
+### TEST F — Order → Profile
+
+Expected:
+
+- Profile enters from right.
+- Order screen exits left.
+- Profile layout remains correct.
+
+### TEST G — Android Back
+
+Expected:
+
+- Correct previous route.
+- Correct directional animation.
+- No history corruption.
+
+### TEST H — State preservation
+
+Before entering Profile:
+
+- Select Takeaway.
+- Enable VEG Mode.
+- Add food to the floating cart.
+
+Return to Home.
+
+Expected:
+
+- Takeaway remains selected.
+- VEG preference remains enabled.
+- Cart contents remain unchanged.
+
+### TEST I — Rapid switching
+
+Tap Home, Order and Profile repeatedly.
+
+Expected:
+
+- No frozen interface.
+- No broken transitions.
+- Correct final route and active indicator.
+
+### TEST J — Visual regression
+
+Capture Home, Order, and Profile before and after implementation.
+
+Expected:
+
+- No redesign of content or layout.
+- Navigation appearance changes only as specified.
+
+---
+
+# 22. REQUIRED LIVE PREVIEW AND VIDEO
+
+After implementation, run the existing PWA.
+
+Do not submit only a written summary.
+
+### Required screenshots
+
+1. Home active.
+2. Order active.
+3. Profile page with left-edge Home pill.
+4. Side-by-side comparison with the supplied approved Campora UI.
+
+### Required animation recording
+
+Capture the following sequence at 390 × 844:
+
+```text
+Home
+  ↓ Tap Order
+Order
+  ↓ Tap Home
+Home
+  ↓ Tap Profile
+Profile
+  ↓ Tap floating Home
+Home
+  ↓ Tap Profile
+Profile
+  ↓ Android/browser Back
+Home
+```
+
+The recording must clearly demonstrate:
+
+- Sliding active indicator.
+- Glossy 3D icon state changes.
+- White active labels.
+- Profile entering from the right.
+- Home entering from the left on return.
+- Profile Home pill moving together with the page.
+- No unwanted layout jumps.
+
+If available, provide a downloadable MP4 generated from the actual PWA recording.
+
+Do not substitute a separately animated design mockup for a real browser recording.
+
+---
+
+# 23. ACCEPTANCE CRITERIA
+
+The task is complete only when:
+
+- [ ] Original joined Home/Order white pill remains unchanged in geometry.
+- [ ] Separate Profile pill retains its unique right-edge positioning.
+- [ ] Home active icon is glossy coral 3D.
+- [ ] Order active icon is glossy amber/orange 3D.
+- [ ] Profile pill uses a glossy purple 3D person icon.
+- [ ] Inactive Home/Order icons remain dark outlines.
+- [ ] Active Home/Order labels are white.
+- [ ] Dark charcoal indicator slides smoothly between Home and Order.
+- [ ] Navigation remains stable during page changes.
+- [ ] Profile enters from the right.
+- [ ] Profile exits toward the right when returning Home.
+- [ ] Home re-enters from the left.
+- [ ] Profile page never shows the conventional bottom navigation.
+- [ ] The approved coral Home pill moves together with the Profile page during transitions.
+- [ ] The Home pill remains fixed while scrolling within Profile.
+- [ ] All existing UI layouts remain unchanged.
+- [ ] Existing cart, VEG preference and service state are preserved.
+- [ ] Android back navigation works correctly.
+- [ ] Responsive layout and safe-area positioning remain correct.
+- [ ] Reduced-motion behavior works.
+- [ ] Real mobile browser preview has been visually tested.
+- [ ] A navigation animation recording has been provided or any recording limitation clearly reported.
+
+---
+
+# FINAL NON-NEGOTIABLE INSTRUCTIONS
+
+**This is the approved Campora Café Premium Navigation v1.0 upgrade.**
+
+Do not turn it into a generic three-tab navigation.
+
+Do not copy Zomato's actual navigation labels or layout.
+
+Do not replace our Profile page with a new design.
+
+Do not animate the coral Home pill separately from Profile.
+
+Do not simply crossfade entire pages.
+
+**The essential sensation is spatial navigation: Home is to the left, Profile is to the right, and the entire page surface moves with its navigation controls.**
+
+Reproduce the polished Zomato-inspired feel using Campora Café's own visual identity.
+
+After implementation:
+
+1. Run the PWA.
+2. Show both active Home/Order navigation states.
+3. Record the complete navigation sequence.
+4. Confirm all three glossy 3D icons are genuine high-quality assets.
+5. List the modified files.
+6. Report unresolved differences from the reference recording.
+7. STOP and wait for my visual approval.
+
+Do not implement any other page or animation until this navigation upgrade is reviewed and approved.

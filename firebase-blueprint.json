@@ -1,0 +1,155 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Customer profile and preferences at Campora Café",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "phoneNumber": { "type": "string", "maxLength": 20 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "vegOnly": { "type": "boolean" },
+            "preferredService": { "type": "string", "enum": ["dinein", "takeaway", "delivery"] }
+          }
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Menu category definition for Campora Café",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "maxLength": 50 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "displayOrder": { "type": "number" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["id", "name", "displayOrder", "isActive"]
+    },
+    "MenuItem": {
+      "title": "MenuItem",
+      "description": "Food and beverage item offered by Campora Café with service availability",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 500 },
+        "price": { "type": "number" },
+        "categoryId": { "type": "string", "maxLength": 64 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "animationAssetUrl": { "type": "string", "maxLength": 500 },
+        "foodType": { "type": "string", "enum": ["veg", "nonveg"] },
+        "preparationTime": { "type": "string", "maxLength": 30 },
+        "serviceAvailability": {
+          "type": "object",
+          "properties": {
+            "dinein": { "type": "boolean" },
+            "takeaway": { "type": "boolean" },
+            "delivery": { "type": "boolean" }
+          },
+          "required": ["dinein", "takeaway", "delivery"]
+        },
+        "isAvailable": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "categoryId", "foodType", "isAvailable", "serviceAvailability"]
+    },
+    "Cart": {
+      "title": "Cart",
+      "description": "Active shopping cart for a customer or session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "serviceMode": { "type": "string", "enum": ["dinein", "takeaway", "delivery"] },
+        "items": { "type": "array" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "serviceMode", "items", "updatedAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order with immutable snapshots and lifecycle states",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "serviceMode": { "type": "string", "enum": ["dinein", "takeaway", "delivery"] },
+        "items": { "type": "array" },
+        "priceSnapshot": { "type": "object" },
+        "subtotal": { "type": "number" },
+        "taxes": { "type": "number" },
+        "applicableCharges": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "orderStatus": { "type": "string", "enum": ["placed", "confirmed", "preparing", "ready", "completed", "cancelled"] },
+        "pickupOrDeliveryDetails": { "type": "object" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orderId", "userId", "serviceMode", "items", "subtotal", "taxes", "grandTotal", "paymentStatus", "orderStatus", "createdAt"]
+    },
+    "Address": {
+      "title": "Address",
+      "description": "Saved delivery or campus location for customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "label": { "type": "string", "maxLength": 50 },
+        "addressDetails": { "type": "string", "maxLength": 300 },
+        "isDefault": { "type": "boolean" }
+      },
+      "required": ["id", "userId", "label", "addressDetails"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "Canteen operational parameters and customer configuration",
+      "type": "object",
+      "properties": {
+        "supportedServices": { "type": "array" },
+        "orderingAvailability": { "type": "boolean" },
+        "customerFacingConfig": { "type": "object" }
+      },
+      "required": ["supportedServices", "orderingAvailability"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Customer profiles and preferences"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Menu categories list"
+    },
+    "/menuItems/{menuItemId}": {
+      "schema": { "$ref": "#/entities/MenuItem" },
+      "description": "Active menu items and pricing"
+    },
+    "/carts/{cartId}": {
+      "schema": { "$ref": "#/entities/Cart" },
+      "description": "User cart storage"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer food orders"
+    },
+    "/addresses/{addressId}": {
+      "schema": { "$ref": "#/entities/Address" },
+      "description": "Saved delivery addresses"
+    },
+    "/appSettings/global": {
+      "schema": { "$ref": "#/entities/AppSettings" },
+      "description": "Global canteen operating hours and settings"
+    }
+  }
+}
