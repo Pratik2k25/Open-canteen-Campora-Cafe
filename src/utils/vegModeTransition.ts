@@ -2,6 +2,7 @@ import type { MenuItem, ServiceMode } from '../types/index.ts';
 import type { FilterKey } from '../components/FilterChips.tsx';
 import type { CustomerProfileData } from './profileData.ts';
 import { getOperatorStorageKey } from './storageKeys.ts';
+import { isItemPackagingFree } from './serviceRules.ts';
 
 export type VegTransitionPhase = 'idle' | 'covering' | 'covered' | 'revealing';
 
@@ -155,14 +156,8 @@ export function filterMenuItemsForHome(
       return false;
     }
 
-    if (activeFilters.includes('noPackaging')) {
-      if (serviceMode !== 'dinein') {
-        const explicitZero = (item as any).packagingCharge === 0;
-        const isFactorySealed = item.visualType === 'pepsi-bottle';
-        if (!explicitZero && !isFactorySealed) {
-          return false;
-        }
-      }
+    if (activeFilters.includes('noPackaging') && !isItemPackagingFree(item, serviceMode)) {
+      return false;
     }
 
     return true;

@@ -34,6 +34,7 @@ interface CartContextType {
   pricing: PriceBreakdown;
   addItem: (item: MenuItem, sourceElement?: HTMLElement | null) => void;
   updateQuantity: (itemId: string, delta: number) => void;
+  updateSpecialInstructions: (itemId: string, instructions: string) => void;
   removeItem: (itemId: string) => void;
   clearCart: () => void;
   getItemQuantity: (itemId: string) => number;
@@ -219,6 +220,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setItems((prev) => prev.filter((ci) => ci.item.id !== itemId));
   };
 
+  const updateSpecialInstructions = (itemId: string, instructions: string) => {
+    setItems((prev) =>
+      prev.map((ci) => {
+        if (ci.item.id === itemId) {
+          const trimmed = instructions.trim();
+          return {
+            ...ci,
+            specialInstructions: trimmed.length > 0 ? instructions : undefined,
+          };
+        }
+        return ci;
+      })
+    );
+  };
+
   const clearCart = () => {
     setItems([]);
   };
@@ -268,6 +284,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pricing,
         addItem,
         updateQuantity,
+        updateSpecialInstructions,
         removeItem,
         clearCart,
         getItemQuantity,

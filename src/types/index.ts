@@ -46,6 +46,7 @@ export interface MenuItem {
   isChefSpecial?: boolean;
   rating?: number;
   calories?: string;
+  packagingCharge?: number;
 }
 
 export interface CartItem {

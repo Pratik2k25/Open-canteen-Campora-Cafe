@@ -5,6 +5,7 @@ export interface NavState {
   isHomeActive: boolean;
   isOrderActive: boolean;
   isProfileActive: boolean;
+  isCartActive: boolean;
   showBottomNav: boolean;
   sliderPosition: 0 | 1; // 0 for Home, 1 for Order
 }
@@ -12,6 +13,7 @@ export interface NavState {
 export function computeNavState(pathname: string): NavState {
   const isProfileActive = pathname === '/profile' || pathname.startsWith('/profile/');
   const isOrderActive = pathname === '/orders' || pathname.startsWith('/orders/');
+  const isCartActive = pathname === '/cart' || pathname.startsWith('/cart/');
   const isHomeActive = pathname === '/';
 
   let currentTab: NavTab = 'other';
@@ -24,8 +26,9 @@ export function computeNavState(pathname: string): NavState {
     isHomeActive,
     isOrderActive,
     isProfileActive,
-    // BottomNav is strictly hidden on /profile
-    showBottomNav: !isProfileActive,
+    isCartActive,
+    // BottomNav is strictly hidden on /profile and /cart (Cart has its own sticky checkout action bar)
+    showBottomNav: !isProfileActive && !isCartActive,
     sliderPosition: isOrderActive ? 1 : 0,
   };
 }

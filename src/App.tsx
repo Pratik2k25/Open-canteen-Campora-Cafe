@@ -9,6 +9,7 @@ import { HomePage } from './pages/HomePage.tsx';
 import { OrdersPage } from './pages/OrdersPage.tsx';
 import { OrderDetailPage } from './pages/OrderDetailPage.tsx';
 import { ProfilePage } from './pages/ProfilePage.tsx';
+import { CartPage } from './pages/CartPage.tsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.tsx';
 
 export default function App() {
@@ -39,11 +40,11 @@ export default function App() {
               />
               <Route
                 path="/cart"
-                element={<PlaceholderPage title="Cart" description="Approved cart design will be built when reference image is provided." />}
+                element={<CartPage />}
               />
               <Route
                 path="/checkout"
-                element={<PlaceholderPage title="Checkout" description="Delivery/table details and payment gateway integration." />}
+                element={<PlaceholderPage title="Checkout" description="Step 1.6 will implement mock checkout, address selection, and payment options." />}
               />
               <Route
                 path="/order-confirmation/:id"

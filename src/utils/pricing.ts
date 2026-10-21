@@ -9,7 +9,12 @@ export const BASE_DELIVERY_FEE = 30; // ₹30 delivery fee
  * Calculates authoritative price breakdown for given cart items and service mode.
  */
 export function calculatePricing(items: CartItem[], serviceMode: ServiceMode): PriceBreakdown {
-  const subtotal = items.reduce((sum, item) => sum + Math.max(0, (item?.item?.price ?? (item as any)?.price ?? 0) * (item?.quantity ?? 0)), 0);
+  const subtotal = items.reduce((sum, item) => {
+    const rawPrice = item?.item?.price ?? (item as unknown as { price?: unknown })?.price;
+    const unitPrice = typeof rawPrice === 'number' ? rawPrice : 0;
+    const qty = Math.max(0, item?.quantity ?? 0);
+    return sum + Math.max(0, unitPrice * qty);
+  }, 0);
   const totalItemCount = items.reduce((sum, item) => sum + Math.max(0, item?.quantity ?? 0), 0);
 
   if (totalItemCount === 0 || subtotal === 0) {

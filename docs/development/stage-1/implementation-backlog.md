@@ -20,8 +20,8 @@ Stage 1: Core Customer PWA & White-Label Foundation
 ├── Step 1.2: Centralized Canteen Branding [COMPLETED]
 ├── Step 1.3: TypeScript Domain Models & Mock Data Adapters [COMPLETED]
 ├── Step 1.4: Home Page Functional Completion [COMPLETED]
-├── Step 1.5: Floating Cart & Cart Page [NEXT MILESTONE]
-├── Step 1.6: Checkout & Mock Order Placement
+├── Step 1.5: Floating Cart & Cart Page [COMPLETED]
+├── Step 1.6: Checkout & Mock Order Placement [NEXT MILESTONE]
 ├── Step 1.7: Orders, Profile & Remaining Customer Pages
 ├── Step 1.8: Animations, Transitions & Loading
 └── Step 1.9: PWA Finalization & Quality Assurance
@@ -98,15 +98,34 @@ Stage 1: Core Customer PWA & White-Label Foundation
 
 ---
 
-## 5. Subsequent Stage 1 Backlog Sequence
+## 5. Step 1.5 Implementation Status (COMPLETED)
 
-### Step 1.5 — Floating Cart & Cart Page (`/cart`) [NEXT MILESTONE]
-- Dedicated full-page cart experience at `/cart` matching approved design.
-- Synchronize floating cart drawer on Home with the full `/cart` page.
-- Bill breakdown (subtotal, taxes, packaging, delivery fee) with real-time recalculation.
-- Clear Cart confirmation and item note instructions.
+### Status Summary
+- **Step 1.5 Status**: **COMPLETE** (October 2026)
+- **Full Cart Page (`/cart`)**: Built mobile-first `CartPage.tsx` adhering to Campora Café design language. Includes Back to Home, active canteen branding, compact 3-way service selector, veg/non-veg markers, unit prices, quantity controls, line totals, and per-item cooking instructions.
+- **Per-Item Cooking Instructions**: Integrated directly into `CartContext.items` (`specialInstructions`) with `updateSpecialInstructions()`. Persists across quantity adjustments, Home ↔ Cart navigation, browser refreshes, and operator boundaries.
+- **Bill Calculation & Service Charges**: Fully unified with `calculatePricing()`. Accurately computes Dine-in packaging (FREE / ₹0), Takeaway packaging (₹15), Delivery packaging (₹20), Delivery fee (₹30), 5% GST, and grand total. Empty carts compute ₹0 with no NaN or negative numbers.
+- **Floating Cart & Cart Page Synchronization**: Home page 3D floating vessel and `/cart` share identical `CartContext` state, quantity steppers, item additions/removals, and persisted storage namespace. The quick-sheet drawer navigates to `/cart` via "View Cart".
+- **Empty Cart & Clear Cart Flow**: Explicit user confirmation modal before clearing all cart items ("Clear your cart?"). Empty cart presents a clean, friendly illustration with a direct "Browse Menu" return to `/`.
+- **Service-Mode Incompatibility & Sanitization**: Compact service-mode switcher on `/cart` detects incompatible items and triggers `ServiceIncompatibilityModal` to prevent accidental loss of unfulfillable items. Tested both "Keep Current Service" and "Remove & Switch" workflows.
+- **Operator Isolation & Storage Persistence**: Strictly namespaces cart storage under `opencanteen:<operatorId>:cart`. Campora Café, Open Canteen demo, and custom canteens maintain completely partitioned carts across reloads and route navigations.
+- **Automated Testing & QA**: 85 unit tests passing across 12 test suites (0 failures). TypeScript checks (`tsc --noEmit`) and production builds succeed with 0 errors. Real browser mobile verification passed at 360px, 390px, and 430px viewports with screenshot evidence captured.
 
-### Step 1.6 — Checkout & Mock Order Placement (`/checkout`, `/order-confirmation/:id`)
+### Completed Tasks Breakdown
+
+| Task ID | Task Description | Target Files | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.5.1** | Full Cart Page component architecture | `src/pages/CartPage.tsx`, `src/App.tsx`, `src/utils/navigationState.ts` | **Complete** | Mobile-first Cart Page with Back button, canteen title, items list, bill card, and sticky checkout bar. Hides BottomNav on `/cart`. |
+| **1.5.2** | Authoritative pricing & service charges | `src/utils/pricing.ts`, `src/pages/CartPage.tsx` | **Complete** | Real-time calculation of Dine-in, Takeaway, and Delivery fees with 5% GST and ₹0 empty state. Safe TypeScript typing without unsafe `any`. |
+| **1.5.3** | Floating Cart synchronization | `src/components/FloatingCart.tsx`, `src/context/CartContext.tsx` | **Complete** | Floating 3D cart vessel and `/cart` fully synchronized. Drawer updated to navigate to `/cart` with "View Cart". |
+| **1.5.4** | Empty Cart & Clear Cart confirmation | `src/pages/CartPage.tsx` | **Complete** | Confirmation dialog with Cancel and Clear actions; charming empty state with "Browse Menu" button navigating to `/`. |
+| **1.5.5** | Operator isolation & automated testing | `src/adapters/cartFunctional.test.ts`, `src/utils/navigationState.test.ts` | **Complete** | 6 functional test scenarios covering addition, removal, pricing, packaging fees, sanitization, and storage key partitioning (`opencanteen:<operatorId>:cart`). |
+
+---
+
+## 6. Subsequent Stage 1 Backlog Sequence
+
+### Step 1.6 — Checkout & Mock Order Placement (`/checkout`, `/order-confirmation/:id`) [NEXT MILESTONE]
 - Service-mode dependent delivery details (Table Number for Dine-in; Counter Pickup estimate for Takeaway; Campus/Hostel Address picker for Delivery).
 - Mock payment method selection (UPI, Cash on Counter, Card).
 - Place order execution through `mockOrderAdapter` with concurrency guards.

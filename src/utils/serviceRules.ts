@@ -38,3 +38,17 @@ export function getServiceModeLabel(mode: ServiceMode): string {
       return mode;
   }
 }
+
+/**
+ * Determines whether an item incurs zero packaging fee under the given service mode.
+ * - In 'dinein', packaging fee is always zero.
+ * - In 'takeaway' or 'delivery', only items with an explicit packagingCharge === 0
+ *   or factory-sealed items (visualType === 'pepsi-bottle') are exempt from mode packaging fees.
+ */
+export function isItemPackagingFree(item: MenuItem, serviceMode: ServiceMode): boolean {
+  if (serviceMode === 'dinein') return true;
+  if (item.packagingCharge === 0) return true;
+  if (item.visualType === 'pepsi-bottle') return true;
+  return false;
+}
+

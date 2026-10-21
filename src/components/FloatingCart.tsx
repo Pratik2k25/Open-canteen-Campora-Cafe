@@ -609,7 +609,7 @@ export const FloatingCart: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setIsDrawerOpen(false);
-                    navigate('/orders');
+                    navigate('/cart');
                   }}
                   style={{ backgroundColor: activeContainer.badgeColorHex }}
                   className="w-full py-3 px-4 rounded-2xl text-white font-extrabold text-[13px] flex items-center justify-between gap-2 shadow-md hover:opacity-95 active:scale-[0.99] transition cursor-pointer"
@@ -618,7 +618,7 @@ export const FloatingCart: React.FC = () => {
                     {activeContainer.modeTitle} · ₹{pricing.grandTotal}
                   </span>
                   <span className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span>View Orders</span>
+                    <span>View Cart</span>
                     <ArrowRight className="w-4 h-4 shrink-0" />
                   </span>
                 </button>
