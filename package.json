@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "bun test src/utils/vegModeTransition.test.ts src/utils/storageMigration.test.ts",
-    "test:unit": "bun test src/utils/vegModeTransition.test.ts src/utils/storageMigration.test.ts"
+    "test": "bun test src/utils/",
+    "test:unit": "bun test src/utils/"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
