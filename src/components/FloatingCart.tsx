@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useCart, type FlightPayload } from '../context/CartContext.tsx';
+import { useAccessibleDialog } from '../utils/useAccessibleDialog.ts';
 import {
   resolveFloatingCartComposition,
   getAllFloatingCartPreloadUrls,
@@ -380,6 +381,19 @@ export const FloatingCart: React.FC = () => {
     return () => clearTimeout(t);
   }, [emptyHintToast]);
 
+  // Clean up any pending flight animation state when FloatingCart unmounts
+  useEffect(() => {
+    return () => {
+      clearActiveFlight();
+    };
+  }, [clearActiveFlight]);
+
+  // Accessible Dialog hook for drawer: Escape, focus trapping, and focus restoration
+  const drawerDialogRef = useAccessibleDialog({
+    isOpen: isDrawerOpen,
+    onClose: () => setIsDrawerOpen(false),
+  });
+
   const handleFloatingCartClick = () => {
     if (totalCartQuantity === 0) {
       setEmptyHintToast(activeContainer.emptySubtitle);
@@ -451,6 +465,7 @@ export const FloatingCart: React.FC = () => {
           onClick={() => setIsDrawerOpen(false)}
         >
           <div
+            ref={drawerDialogRef}
             role="dialog"
             aria-modal="true"
             aria-label={`${activeContainer.modeTitle} summary`}

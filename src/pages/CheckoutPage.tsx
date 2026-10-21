@@ -976,7 +976,7 @@ export const CheckoutPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleConfirmOrder()}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCartEmpty}
                 data-testid="checkout-confirm-btn"
                 className="py-3 px-6 rounded-2xl bg-[#F05360] hover:bg-[#E14552] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-extrabold text-[13.5px] shadow-[0_4px_14px_rgba(240,83,96,0.35)] transition flex items-center gap-2 cursor-pointer"
               >

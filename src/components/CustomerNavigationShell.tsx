@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useOutlet } from 'react-router-dom';
+import { useLocation, useNavigate, useOutlet, useNavigationType } from 'react-router-dom';
 import { BottomNavigation } from './BottomNavigation.tsx';
 import { ProfilePage } from '../pages/ProfilePage.tsx';
 import {
@@ -15,6 +15,7 @@ export const CustomerNavigationShell: React.FC<CustomerNavigationShellProps> = (
   const location = useLocation();
   const navigate = useNavigate();
   const outlet = useOutlet();
+  const navigationType = useNavigationType();
 
   const currentPath = location.pathname;
   const isProfile = currentPath === '/profile';
@@ -36,9 +37,29 @@ export const CustomerNavigationShell: React.FC<CustomerNavigationShellProps> = (
   }, [currentPath, isProfile, outlet]);
 
   const prevPathRef = useRef<string>(currentPath);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollPositionsRef = useRef<Map<string, number>>(new Map());
+  const currentKey = location.key || currentPath;
+
   const [transitioning, setTransitioning] = useState<boolean>(false);
   const [slidingActive, setSlidingActive] = useState<boolean>(false);
   const [transitionType, setTransitionType] = useState<'to-profile' | 'from-profile' | null>(null);
+
+  // History-aware scroll restoration: restore position on POP (back/forward), scroll to top on PUSH
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      if (navigationType === 'POP') {
+        const savedY = scrollPositionsRef.current.get(currentKey) ?? 0;
+        scrollContainerRef.current.scrollTo({ top: savedY, left: 0, behavior: 'instant' });
+      } else {
+        scrollContainerRef.current.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      }
+    }
+  }, [currentKey, navigationType]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    scrollPositionsRef.current.set(currentKey, e.currentTarget.scrollTop);
+  };
 
   // Check reduced motion preference
   const prefersReducedMotion =
@@ -161,7 +182,7 @@ export const CustomerNavigationShell: React.FC<CustomerNavigationShellProps> = (
         }}
       >
         {/* Scrollable Main Content Container */}
-        <div className="w-full h-full overflow-y-auto no-scrollbar">
+        <div ref={scrollContainerRef} onScroll={handleScroll} className="w-full h-full overflow-y-auto no-scrollbar">
           {shouldRenderMain && (isProfile ? cachedMainOutlet : outlet)}
         </div>
 

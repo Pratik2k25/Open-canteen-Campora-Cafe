@@ -18,6 +18,7 @@ import {
 import { mockProfileAdapter } from '../adapters/mockProfileAdapter.ts';
 import { ProfilePageSkeleton } from '../components/skeleton/ProfilePageSkeleton.tsx';
 import { usePageReadiness } from '../hooks/usePageReadiness.ts';
+import { useAccessibleDialog } from '../utils/useAccessibleDialog.ts';
 
 const isDialablePhone = (phone?: string): boolean => {
   if (!phone) return false;
@@ -167,6 +168,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     const targetOperator = operatorId;
     activeOperatorRef.current = targetOperator;
 
+    // Synchronously set to new operator's sync profile immediately to prevent old data flashing
+    const syncProfile = mockProfileAdapter.getProfileSync(targetOperator);
+    setProfile({
+      ...syncProfile,
+      vegMode: readCanonicalVegPreference(syncProfile.vegMode, undefined, targetOperator),
+    });
+    // Safely dismiss open sheets and confirmation dialogs on operator switch
+    setActiveSheet(null);
+    setDeleteConfirmAddrId(null);
+    setEditingAddrId(null);
+    setAddressSubView('list');
+
     const loadProfile = async () => {
       const loaded = await mockProfileAdapter.getProfile(targetOperator);
       if (!isCancelled && activeOperatorRef.current === targetOperator) {
@@ -191,6 +204,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       setStatusToast((prev) => (prev === msg ? null : prev));
     }, 2400);
   };
+
+  // Accessible Dialog Hook for active bottom sheets & dialogs: Escape, focus trapping, focus restoration
+  const sheetDialogRef = useAccessibleDialog({
+    isOpen: Boolean(activeSheet),
+    onClose: () => {
+      if (deleteConfirmAddrId) {
+        setDeleteConfirmAddrId(null);
+      } else if (addressSubView !== 'list') {
+        setAddressSubView('list');
+      } else {
+        setActiveSheet(null);
+      }
+    },
+  });
 
   const handleToggleVegMode = async () => {
     const nextVegMode = !profile.vegMode;
@@ -901,6 +928,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             onClick={() => setActiveSheet(null)}
           >
             <div
+              ref={sheetDialogRef}
               role="dialog"
               aria-modal="true"
               className="w-full max-w-[430px] bg-white rounded-t-[24px] p-5 shadow-2xl relative"

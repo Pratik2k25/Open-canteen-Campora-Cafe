@@ -20,6 +20,7 @@ import { formatINR } from '../utils/pricing.ts';
 import { getServiceTheme } from '../utils/serviceTheme.ts';
 import { getServiceModeLabel } from '../utils/serviceRules.ts';
 import { ServiceIncompatibilityModal } from '../components/ServiceIncompatibilityModal.tsx';
+import { useAccessibleDialog } from '../utils/useAccessibleDialog.ts';
 import type { ServiceMode } from '../types/index.ts';
 
 export const CartPage: React.FC = () => {
@@ -47,6 +48,24 @@ export const CartPage: React.FC = () => {
   const handleImageError = (itemId: string) => {
     setImgErrors((prev) => ({ ...prev, [itemId]: true }));
   };
+
+  // Accessible dialog hook for Clear Cart modal: Escape, focus trap, and focus restoration
+  const clearDialogRef = useAccessibleDialog({
+    isOpen: isClearModalOpen,
+    onClose: () => setIsClearModalOpen(false),
+  });
+
+  // Accessible Escape key listener for cooking instructions note input
+  React.useEffect(() => {
+    if (!activeNoteItemId) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveNoteItemId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeNoteItemId]);
 
   const handleConfirmClear = () => {
     clearCart();
@@ -519,6 +538,7 @@ export const CartPage: React.FC = () => {
         {/* ================================================================= */}
         {isClearModalOpen && (
           <div
+            ref={clearDialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="clear-cart-title"

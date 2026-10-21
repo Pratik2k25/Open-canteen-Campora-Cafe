@@ -19,6 +19,8 @@ import { useCart } from '../context/CartContext.tsx';
 import { useCanteen } from '../context/CanteenContext.tsx';
 import { mockMenuAdapter } from '../adapters/mockMenuAdapter.ts';
 import { BottomNavigation } from '../components/BottomNavigation.tsx';
+import { SkeletonShimmer } from '../components/skeleton/SkeletonShimmer.tsx';
+import { useAccessibleDialog } from '../utils/useAccessibleDialog.ts';
 import {
   getOrderStatusBadgeConfig,
   getServiceBadgeConfig,
@@ -32,7 +34,7 @@ interface OrderDetailPageProps {
 export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ hideBottomNav = false }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getOrderById, cancelOrder } = useOrders();
+  const { getOrderById, cancelOrder, loadingOrders } = useOrders();
   const { items: cartItems, addItem } = useCart();
   const { config } = useCanteen();
   const operatorId = config?.identity?.id || 'campora-cafe';
@@ -60,6 +62,96 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ hideBottomNav 
       setStatusToast((prev) => (prev === msg ? null : prev));
     }, 2800);
   };
+
+  // Accessible dialog hooks: Escape, focus trap, and focus restoration
+  const cancelDialogRef = useAccessibleDialog({
+    isOpen: Boolean(showCancelModal && !cancelling),
+    onClose: () => setShowCancelModal(false),
+  });
+
+  const reorderDialogRef = useAccessibleDialog({
+    isOpen: Boolean(reorderNotice),
+    onClose: () => setReorderNotice(null),
+  });
+
+  // Coherent loading state while async orders resolve from storage
+  if (loadingOrders && !order) {
+    return (
+      <div
+        data-testid="order-detail-loading"
+        className="min-h-screen bg-[#F8F9FA] text-neutral-900 pb-28 flex flex-col items-center select-none"
+      >
+        <div className="w-full max-w-[430px] min-h-screen bg-[#F8F9FA] flex flex-col relative shadow-sm">
+          {/* Header Skeleton */}
+          <div className="px-4 py-3.5 bg-white border-b border-neutral-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-neutral-100 relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+              <div className="space-y-1.5">
+                <div className="w-24 h-4 bg-neutral-200/80 rounded-md relative overflow-hidden">
+                  <SkeletonShimmer />
+                </div>
+                <div className="w-32 h-3 bg-neutral-100 rounded-md relative overflow-hidden">
+                  <SkeletonShimmer />
+                </div>
+              </div>
+            </div>
+            <div className="w-16 h-6 rounded-full bg-neutral-100 relative overflow-hidden">
+              <SkeletonShimmer />
+            </div>
+          </div>
+
+          <main className="p-4 flex flex-col gap-3.5">
+            {/* Fulfillment Skeleton Card */}
+            <div className="bg-white rounded-[18px] p-4 border border-neutral-100/90 space-y-3 relative overflow-hidden">
+              <div className="w-28 h-4 bg-neutral-200/70 rounded-md relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+              <div className="w-full h-12 bg-neutral-100 rounded-xl relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+            </div>
+
+            {/* Items Skeleton Card */}
+            <div className="bg-white rounded-[18px] p-4 border border-neutral-100/90 space-y-3 relative overflow-hidden">
+              <div className="w-32 h-4 bg-neutral-200/70 rounded-md relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+              <div className="space-y-2.5">
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-3 py-2 border-b border-neutral-50 last:border-0">
+                    <div className="w-12 h-12 rounded-[10px] bg-neutral-100 relative overflow-hidden shrink-0">
+                      <SkeletonShimmer />
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <div className="w-3/4 h-3.5 bg-neutral-200/80 rounded-md relative overflow-hidden">
+                        <SkeletonShimmer />
+                      </div>
+                      <div className="w-1/3 h-3 bg-neutral-100 rounded-md relative overflow-hidden">
+                        <SkeletonShimmer />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bill Summary Skeleton */}
+            <div className="bg-white rounded-[18px] p-4 border border-neutral-100/90 space-y-2 relative overflow-hidden">
+              <div className="w-24 h-4 bg-neutral-200/70 rounded-md relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+              <div className="w-full h-16 bg-neutral-50 rounded-xl relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+            </div>
+          </main>
+          {!hideBottomNav && <BottomNavigation />}
+        </div>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -303,7 +395,8 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ hideBottomNav 
                 </>
               )}
 
-              {order.pickupOrDeliveryDetails?.notes && (
+              {order.pickupOrDeliveryDetails?.notes &&
+                !order.pickupOrDeliveryDetails.notes.startsWith('Cancelled:') && (
                 <div className="mt-1 pt-2 border-t border-neutral-100 flex justify-between items-start gap-2">
                   <span className="text-[#64748B] shrink-0">Special Notes:</span>
                   <span className="font-medium text-[#475569] text-right italic">
@@ -316,7 +409,10 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ hideBottomNav 
                 <div className="mt-1 pt-2 border-t border-rose-100 flex justify-between items-start gap-2 bg-rose-50/70 p-2.5 rounded-xl">
                   <span className="text-[#D92D20] font-bold shrink-0">Cancellation Reason:</span>
                   <span className="font-semibold text-[#991B1B] text-right">
-                    {order.cancellationReason || 'Cancelled by customer'}
+                    {order.cancellationReason ||
+                      (order.pickupOrDeliveryDetails?.notes?.includes('Cancelled:')
+                        ? order.pickupOrDeliveryDetails.notes.split('Cancelled:')[1]?.trim()
+                        : 'Cancelled by customer')}
                   </span>
                 </div>
               )}
@@ -475,6 +571,7 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ hideBottomNav 
             onClick={() => !cancelling && setShowCancelModal(false)}
           >
             <div
+              ref={cancelDialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="cancel-modal-title"
@@ -540,8 +637,10 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ hideBottomNav 
             onClick={() => setReorderNotice(null)}
           >
             <div
+              ref={reorderDialogRef}
               role="dialog"
               aria-modal="true"
+              aria-labelledby="reorder-modal-title"
               className="bg-white rounded-[22px] p-5 w-full max-w-[360px] shadow-2xl flex flex-col gap-3.5"
               onClick={(e) => e.stopPropagation()}
             >
@@ -550,7 +649,7 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ hideBottomNav 
               </div>
 
               <div className="text-center">
-                <h3 className="text-[16px] font-extrabold text-[#111827]">{reorderNotice.title}</h3>
+                <h3 id="reorder-modal-title" className="text-[16px] font-extrabold text-[#111827]">{reorderNotice.title}</h3>
                 <p className="text-[12.5px] text-[#64748B] mt-1">{reorderNotice.message}</p>
               </div>
 

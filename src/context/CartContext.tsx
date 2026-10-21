@@ -129,6 +129,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       operatorId
     );
     setServiceModeState(loadedMode);
+    setActiveFlight(null);
     activeOperatorRef.current = operatorId;
   }, [operatorId]);
 
@@ -161,8 +162,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const pricing = calculatePricing(items, serviceMode);
 
   const addItem = (item: MenuItem, sourceElement?: HTMLElement | null) => {
-    // Trigger curved flight path animation targeting the specific food or beverage slot
-    if (sourceElement) {
+    // Trigger curved flight path animation targeting the specific food or beverage slot (skipped if reduced motion)
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (sourceElement && !prefersReducedMotion) {
       const rect = sourceElement.getBoundingClientRect();
       const cartTargetEl = document.getElementById('campora-floating-cart-target');
       const { offsetX, offsetY } = getFlightTargetOffsetForItem(serviceMode, item);

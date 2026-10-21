@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
 import { getServiceModeLabel } from '../utils/serviceRules.ts';
+import { useAccessibleDialog } from '../utils/useAccessibleDialog.ts';
 import type { CartItem } from '../types/index.ts';
 
 const PREVIEW_INCOMPATIBLE_ITEMS: CartItem[] = [
@@ -37,7 +38,7 @@ export const ServiceIncompatibilityModal: React.FC = () => {
   const targetLabel = getServiceModeLabel(targetMode);
   const displayItems = incompatibleModal?.incompatibleItems ?? PREVIEW_INCOMPATIBLE_ITEMS;
 
-  const handleClose = () => {
+  const handleClose = React.useCallback(() => {
     if (isPreview) {
       const nextParams = new URLSearchParams(searchParams);
       nextParams.delete('incompatible');
@@ -47,7 +48,13 @@ export const ServiceIncompatibilityModal: React.FC = () => {
     if (incompatibleModal?.isOpen) {
       closeIncompatibleModal();
     }
-  };
+  }, [isPreview, searchParams, setSearchParams, incompatibleModal?.isOpen, closeIncompatibleModal]);
+
+  // Accessible dialog hook for ServiceIncompatibilityModal: Escape, focus trap, and focus restoration
+  const modalDialogRef = useAccessibleDialog({
+    isOpen: Boolean(incompatibleModal?.isOpen || isPreview),
+    onClose: handleClose,
+  });
 
   const handleConfirm = () => {
     if (isPreview) {
@@ -63,6 +70,7 @@ export const ServiceIncompatibilityModal: React.FC = () => {
 
   return (
     <div
+      ref={modalDialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="service-change-title"

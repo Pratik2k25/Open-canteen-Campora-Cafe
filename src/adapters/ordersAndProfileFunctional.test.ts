@@ -123,9 +123,10 @@ test('Orders & Profile: 3. Cancellation rules enforce non-terminal states and pe
   const cancelledOrder = await orderAdapter.cancelOrder('campora-cafe', 'C1047', 'Changed my mind');
   assert.equal(cancelledOrder.orderStatus, 'cancelled', 'Status must transition to cancelled');
   assert.equal(cancelledOrder.cancellationReason, 'Changed my mind', 'Cancellation reason must be retained in dedicated field');
-  assert.ok(
-    cancelledOrder.pickupOrDeliveryDetails?.notes?.includes('Changed my mind'),
-    'Cancellation reason must be captured in order notes'
+  assert.equal(
+    cancelledOrder.pickupOrDeliveryDetails?.notes,
+    'Serve hot with saffron syrup',
+    'Original customer notes must be preserved uncorrupted'
   );
 
   // Verify persistence in adapter storage

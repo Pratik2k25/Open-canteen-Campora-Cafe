@@ -130,9 +130,14 @@ export const storageValidators = {
  * Example: `opencanteen:campora-cafe:cart`, `opencanteen:open-canteen:cart`
  */
 export function getOperatorStorageKey(baseKey: string, operatorId?: string): string {
-  if (!operatorId) return baseKey;
+  if (!operatorId || !operatorId.trim()) return baseKey;
   const sanitizedId = operatorId.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '_');
-  const keySuffix = baseKey.startsWith('opencanteen_') ? baseKey.slice('opencanteen_'.length) : baseKey;
+  if (!sanitizedId) return baseKey;
+
+  let keySuffix = baseKey.startsWith('opencanteen_') ? baseKey.slice('opencanteen_'.length) : baseKey;
+  if (keySuffix === 'profile_v1') {
+    keySuffix = 'profile';
+  }
   return `opencanteen:${sanitizedId}:${keySuffix}`;
 }
 
@@ -195,6 +200,13 @@ export function readScopedOrLegacy<T>(
       const partitionedVal = storage.getItem(partitionedKey);
       if (partitionedVal !== null && validator(partitionedVal)) {
         return deserializer(partitionedVal);
+      }
+      // Backward-compatibility: if key ends with :profile, also check legacy :profile_v1 scoped key
+      if (partitionedKey.endsWith(':profile')) {
+        const legacyScopedVal = storage.getItem(`${partitionedKey}_v1`);
+        if (legacyScopedVal !== null && validator(legacyScopedVal)) {
+          return deserializer(legacyScopedVal);
+        }
       }
     }
 

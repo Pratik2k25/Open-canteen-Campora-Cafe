@@ -165,6 +165,21 @@
   animation: camporaShimmer 1.4s infinite ease-in-out;
 }
 
+@keyframes camporaFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: camporaFadeIn 180ms ease-out forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-cart-receive,
   .animate-badge-pop,
@@ -172,8 +187,17 @@
   .animate-veg-ripple-mid,
   .animate-veg-ripple-inner,
   .animate-veg-emblem,
-  .animate-shimmer {
+  .animate-shimmer,
+  .animate-fade-in {
     animation: none !important;
+  }
+
+  [data-testid="floating-cart-flight-item"] {
+    display: none !important;
+  }
+
+  [data-testid="veg-mode-transition-overlay"] {
+    display: none !important;
   }
 }
 

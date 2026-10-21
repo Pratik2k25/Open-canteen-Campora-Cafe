@@ -189,16 +189,64 @@ Stage 1: Core Customer PWA & White-Label Foundation
 
 ---
 
-## 8. Subsequent Stage 1 Backlog Sequence
+## 8. Step 1.8 Implementation Status (COMPLETED)
 
-### Step 1.8 — Animations, Transitions & Loading [NEXT MILESTONE]
-- High-fidelity micro-interactions and transitions across all customer routes.
-- Full-screen VEG mode radial transition animation with sound/haptics toggle support.
-- Floating cart item fly-in and beverage 3D bottle animations.
-- Page readiness skeletons for Home, Cart, Orders, and Profile.
-- Reduced-motion accessibility (`prefers-reduced-motion`) and mobile frame stability (60fps).
+### Status Summary
+- **Step 1.8 Status**: **COMPLETE** (October 2026)
+- **Strict Storage-Key Architecture & Cancellation Hardening**:
+  - Restored strict `getOperatorStorageKey(baseKey: string, operatorId?: string): string` API contract without argument guessing or auto-detection.
+  - Audited all call sites in repository to ensure `baseKey` is strictly passed first and `operatorId` second.
+  - Added comprehensive regression tests in `src/utils/storageMigration.test.ts` verifying exact canonical key generation for `campora-cafe`, `open-canteen`, `custom-canteen`, uppercase, whitespace, and special characters (`Campus Dhaba #4!`).
+  - Dedicated `cancellationReason` fully isolated in `MockOrderAdapter.cancelOrder` without polluting customer notes or per-item cooking notes.
+  - Backward compatibility in `OrderDetailPage` preserves legacy notes parsing while filtering cancellation strings out of customer cooking notes.
+- **History-Aware Route Scroll Restoration**:
+  - `CustomerNavigationShell` implements history-aware scroll restoration via `useNavigationType()`.
+  - On `POP` (browser Back/Forward or back navigation), exact previous scroll offset is restored without jarring resets to the top.
+  - On `PUSH` (forward navigation to a new route), scroll position cleanly initializes at `top: 0`.
+- **Comprehensive Modal & Bottom Sheet Accessibility**:
+  - Built centralized `useAccessibleDialog` hook implementing full WCAG modal ergonomics.
+  - Automatic focus entry into dialog on mount.
+  - Strict keyboard focus trap (`Tab` and `Shift+Tab` cycle only among visible interactive elements).
+  - Clean `Escape` key dismissal.
+  - Focus restoration returning focus directly to triggering button upon dismissal.
+  - Applied across Floating Cart quick-sheet drawer, Cart clear modal, Service Incompatibility modal, Product details modal, Order cancellation dialog, Reorder dialog, and Profile bottom sheets.
+- **VEG Radial Reveal & State Machine**:
+  - Mint radial reveal transitions smoothly through cover, covered, reveal, and idle phases.
+  - Rapid toggling updates `runId` and cancels stale timer commits, preventing stuck overlays and unmounted state updates.
+  - Reduced-motion mode (`prefers-reduced-motion: reduce`) skips full-screen canvas/overlay expansion and applies dietary filter immediately.
+- **Skeletons & Async Hydration**:
+  - `OrderDetailPage` renders accessible `order-detail-loading` skeleton while orders hydrate, completely avoiding premature "Order Not Found" flashes.
+  - `OrderConfirmationPage` renders accessible `order-confirmation-loading` skeleton during hydration and only renders not-found after orders resolve.
+  - `CheckoutPage` confirm button is disabled during empty or hydrating cart state, preventing premature order submissions.
+  - `ProfilePage` hydrates synchronously on operator switch, avoiding flashes of previous operator profiles, and auto-dismisses open modal sheets.
+- **Reduced-Motion Accessibility**:
+  - CSS tokens in `src/index.css` enforce reduced motion for `.animate-fade-in`, `[data-testid="floating-cart-flight-item"]`, and `[data-testid="veg-mode-transition-overlay"]`.
+  - Flight animation in `CartContext` checks `prefers-reduced-motion` and skips spatial flight when enabled.
+- **Automated Testing & QA**:
+  - 119 unit tests passing across 15 test suites (0 failures).
+  - TypeScript check (`tsc --noEmit`) clean, Vite production build clean.
+  - Real browser verification confirmed on mobile viewports (`360x780`, `390x844`, `430x932`) and desktop (`1200x800`) covering Home, Cart, Checkout, Confirmation, Orders list, Order Details, Cancel modal, Profile, Address Book, scroll restoration, and keyboard `Escape`/`Tab` focus management.
 
-### Step 1.9 — PWA Finalization & Quality Assurance
+### Completed Tasks Breakdown
+
+| Task ID | Task Description | Target Files | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.8.1** | Animation architecture audit & inventory | Multiple components, `src/index.css` | **Complete** | Audited all motion sites, identified missing CSS keyframes, documented reduced motion. |
+| **1.8.2** | Route transition quality & history scroll restoration | `src/components/CustomerNavigationShell.tsx` | **Complete** | History-aware scroll restoration via `useNavigationType()`; zero layout thrashing or duplicate nav bars. |
+| **1.8.3** | Food-to-cart flight & floating cart cleanup | `src/context/CartContext.tsx`, `src/components/FloatingCart.tsx` | **Complete** | Unmount cleanup, operator switch flight reset, reduced-motion bypass. |
+| **1.8.4** | VEG radial reveal & rapid toggle protection | `src/utils/vegModeTransition.ts`, `src/index.css` | **Complete** | State machine protects against stale timers; reduced-motion skips overlay. |
+| **1.8.5** | Skeletons, loading & empty states | `src/pages/OrderDetailPage.tsx`, `src/pages/OrderConfirmationPage.tsx`, `src/pages/CheckoutPage.tsx`, `src/pages/ProfilePage.tsx` | **Complete** | Loading skeletons during order hydration; no premature not-found flashes; disabled checkout while resolving. |
+| **1.8.6** | Reduced-motion accessibility | `src/index.css`, `src/context/CartContext.tsx`, `src/utils/vegModeTransition.ts` | **Complete** | Global and component-level reduced-motion rules for flight, overlays, and transitions. |
+| **1.8.7** | Mobile performance & layout stability | `src/index.css`, `src/components/CustomerNavigationShell.tsx` | **Complete** | Selective GPU acceleration with transform/opacity, zero forced layout thrashing. |
+| **1.8.8** | Modal & bottom sheet accessibility controller | `src/utils/useAccessibleDialog.ts`, multiple modals | **Complete** | Centralized focus trap, focus restoration, accessible ARIA roles, and Escape listener across all dialogs. |
+| **1.8.9** | Strict storage key contract & regression tests | `src/utils/storageKeys.ts`, `src/utils/storageMigration.test.ts` | **Complete** | Strict `(baseKey, operatorId)` signature, operator ID sanitization, normal/unusual/ambiguous test coverage. |
+| **1.8.10** | Automated testing & regression suite | `src/adapters/motionAndLoadingFunctional.test.ts` | **Complete** | 10 comprehensive unit tests covering VEG state machine, rapid toggle, reduced motion, flight offsets, spatial coords, and cancellation. |
+
+---
+
+## 9. Subsequent Stage 1 Backlog Sequence
+
+### Step 1.9 — PWA Finalization & Quality Assurance [NEXT MILESTONE]
 - Service worker precaching and offline fallback screen.
 - Web app manifest verification for installability.
 - Multi-viewport responsive audit (360px to 430px mobile viewports).

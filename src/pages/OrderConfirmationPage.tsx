@@ -24,17 +24,73 @@ import { useCanteen } from '../context/CanteenContext.tsx';
 import { formatINR } from '../utils/pricing.ts';
 import { getServiceBadgeConfig, getOrderStatusBadgeConfig } from '../utils/orderHistory.ts';
 import { getServiceModeLabel } from '../utils/serviceRules.ts';
+import { SkeletonShimmer } from '../components/skeleton/SkeletonShimmer.tsx';
 
 export const OrderConfirmationPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { config } = useCanteen();
-  const { getOrderById } = useOrders();
+  const { getOrderById, loadingOrders } = useOrders();
 
   const canteenName = config?.identity?.displayName || 'Campora Café';
   const displayLocation = config?.location?.displayLocation || 'Campus Cafeteria';
 
   const order = id ? getOrderById(id) : undefined;
+
+  // Handle loading state before async orders hydrate
+  if (loadingOrders && !order) {
+    return (
+      <div
+        data-testid="order-confirmation-loading"
+        className="min-h-screen bg-[#F8FAFC] text-neutral-900 pb-28 flex flex-col items-center select-none"
+      >
+        <div className="w-full max-w-[430px] min-h-screen bg-[#F8FAFC] flex flex-col relative shadow-sm">
+          {/* Header Skeleton */}
+          <section className="bg-white border-b border-neutral-200/80 px-4 pt-8 pb-6 flex flex-col items-center text-center space-y-3 relative overflow-hidden">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center relative overflow-hidden">
+              <SkeletonShimmer tint="mint" />
+            </div>
+            <div className="w-24 h-5 bg-neutral-200/70 rounded-full relative overflow-hidden">
+              <SkeletonShimmer />
+            </div>
+            <div className="w-36 h-6 bg-neutral-200/80 rounded-md relative overflow-hidden">
+              <SkeletonShimmer />
+            </div>
+            <div className="w-48 h-3.5 bg-neutral-100 rounded-md relative overflow-hidden">
+              <SkeletonShimmer />
+            </div>
+          </section>
+
+          <main className="flex-1 flex flex-col gap-3.5 px-4 pt-4">
+            {/* Fulfillment Skeleton Card */}
+            <div className="bg-white rounded-2xl p-4 border border-neutral-200/80 shadow-xs space-y-3 relative overflow-hidden">
+              <div className="w-32 h-4 bg-neutral-200/70 rounded-md relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+              <div className="space-y-2">
+                <div className="w-full h-4 bg-neutral-100 rounded-md relative overflow-hidden">
+                  <SkeletonShimmer />
+                </div>
+                <div className="w-3/4 h-4 bg-neutral-100 rounded-md relative overflow-hidden">
+                  <SkeletonShimmer />
+                </div>
+              </div>
+            </div>
+
+            {/* Receipt Skeleton Card */}
+            <div className="bg-white rounded-2xl p-4 border border-neutral-200/80 shadow-xs space-y-3 relative overflow-hidden">
+              <div className="w-28 h-4 bg-neutral-200/70 rounded-md relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+              <div className="w-full h-20 bg-neutral-50 rounded-xl relative overflow-hidden">
+                <SkeletonShimmer />
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   // Handle missing or invalid order
   if (!order) {

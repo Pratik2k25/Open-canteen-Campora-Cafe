@@ -181,7 +181,11 @@ test('9 & 15. Order cancellation eligibility and failure handling', async () => 
   const cancelled = await adapter.cancelOrder('campora-cafe', 'C1047', 'Customer changed mind');
   assert.equal(cancelled.orderStatus, 'cancelled');
   assert.equal(cancelled.cancellationReason, 'Customer changed mind');
-  assert.ok(cancelled.pickupOrDeliveryDetails.notes?.includes('Customer changed mind'));
+  assert.equal(
+    cancelled.pickupOrDeliveryDetails.notes,
+    'Serve hot with saffron syrup',
+    'Original customer notes must remain uncorrupted'
+  );
 
   // C1046 is 'delivered' -> should NOT be cancellable
   const orderC1046 = await adapter.getOrderById('campora-cafe', 'C1046');

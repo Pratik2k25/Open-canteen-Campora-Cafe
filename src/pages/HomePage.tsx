@@ -15,6 +15,7 @@ import { useCanteen } from '../context/CanteenContext.tsx';
 import { useCanteenCatalog } from '../hooks/useCanteenCatalog.ts';
 import { useCart } from '../context/CartContext.tsx';
 import { getServiceTheme } from '../utils/serviceTheme.ts';
+import { useAccessibleDialog } from '../utils/useAccessibleDialog.ts';
 import {
   readCanonicalVegPreference,
   writeCanonicalVegPreference,
@@ -145,6 +146,12 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
     },
     [vegMachine.toggleVegOnly, triggerVegPreferenceChange]
   );
+
+  // Accessible dialog hook for product quick modal: Escape, focus trap, and focus restoration
+  const productDialogRef = useAccessibleDialog({
+    isOpen: Boolean(selectedProduct),
+    onClose: () => setSelectedProduct(null),
+  });
 
   // Toggle filter chip
   const handleToggleFilter = (key: FilterKey) => {
@@ -320,6 +327,10 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
             onClick={() => setSelectedProduct(null)}
           >
             <div
+              ref={productDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="product-modal-title"
               className="w-full max-w-[420px] bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl p-5"
               onClick={(e) => e.stopPropagation()}
             >
@@ -331,7 +342,8 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
                 />
                 <button
                   onClick={() => setSelectedProduct(null)}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"
+                  aria-label="Close product details"
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 cursor-pointer"
                 >
                   ✕
                 </button>
@@ -339,7 +351,7 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
 
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-neutral-900">{selectedProduct.name}</h3>
+                  <h3 id="product-modal-title" className="text-lg font-bold text-neutral-900">{selectedProduct.name}</h3>
                   <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
                     {selectedProduct.description}
                   </p>

@@ -175,10 +175,6 @@ export class MockOrderAdapter implements IOrderAdapter {
     }
 
     const cancellationReason = reason || 'Cancelled by customer';
-    const existingNotes = targetOrder.pickupOrDeliveryDetails?.notes;
-    const backwardCompatNotes = existingNotes
-      ? (existingNotes.includes(cancellationReason) ? existingNotes : `${existingNotes} | Cancelled: ${cancellationReason}`)
-      : `Cancelled: ${cancellationReason}`;
 
     const updatedOrder: Order = {
       ...targetOrder,
@@ -187,7 +183,6 @@ export class MockOrderAdapter implements IOrderAdapter {
       updatedAt: new Date().toISOString(),
       pickupOrDeliveryDetails: {
         ...targetOrder.pickupOrDeliveryDetails,
-        notes: backwardCompatNotes,
       },
     };
 

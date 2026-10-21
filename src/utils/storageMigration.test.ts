@@ -304,3 +304,40 @@ test('Canteen Config: Checkpoint 1 Deployment configuration resolves cleanly', (
   assert.ok(config.identity.displayName);
   assert.ok(config.pwa.appName);
 });
+
+test('Storage Keys: Strict API contract and exact key formats for canonical operations', () => {
+  // 1. Exact Campora Café keys verified
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, 'campora-cafe'), 'opencanteen:campora-cafe:cart');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.ORDERS, 'campora-cafe'), 'opencanteen:campora-cafe:orders_v2');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.PROFILE, 'campora-cafe'), 'opencanteen:campora-cafe:profile');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.VEG_ONLY, 'campora-cafe'), 'opencanteen:campora-cafe:veg_only');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.USER, 'campora-cafe'), 'opencanteen:campora-cafe:user');
+
+  // 2. Open Canteen keys verified
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, 'open-canteen'), 'opencanteen:open-canteen:cart');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.ORDERS, 'open-canteen'), 'opencanteen:open-canteen:orders_v2');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.PROFILE, 'open-canteen'), 'opencanteen:open-canteen:profile');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.VEG_ONLY, 'open-canteen'), 'opencanteen:open-canteen:veg_only');
+
+  // 3. Custom operator keys verified
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, 'custom-canteen'), 'opencanteen:custom-canteen:cart');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.ORDERS, 'custom-canteen'), 'opencanteen:custom-canteen:orders_v2');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.PROFILE, 'custom-canteen'), 'opencanteen:custom-canteen:profile');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.VEG_ONLY, 'custom-canteen'), 'opencanteen:custom-canteen:veg_only');
+
+  // 4. Unusual and ambiguous operator IDs (case, whitespace, special chars)
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, 'CAMPORA-CAFE'), 'opencanteen:campora-cafe:cart');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, '  campora-cafe  '), 'opencanteen:campora-cafe:cart');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, 'Campus Dhaba #4!'), 'opencanteen:campus_dhaba__4_:cart');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, 'user.name@campus'), 'opencanteen:user_name_campus:cart');
+
+  // 5. Missing or empty operatorId preserves base key without modification
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, undefined), 'opencanteen_cart');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, ''), 'opencanteen_cart');
+  assert.equal(getOperatorStorageKey(STORAGE_KEYS.CART, '   '), 'opencanteen_cart');
+
+  // 6. Strict contract: never guesses or auto-swaps reversed arguments
+  // If first argument is 'campora-cafe' and second is 'cart', it treats 'campora-cafe' strictly as baseKey
+  assert.equal(getOperatorStorageKey('campora-cafe', 'custom-op'), 'opencanteen:custom-op:campora-cafe');
+});
+
