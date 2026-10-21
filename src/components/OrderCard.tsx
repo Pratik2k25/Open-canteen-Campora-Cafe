@@ -43,6 +43,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onSelectOrder }) =>
           alt={`Order #${cleanOrderId} thumbnail`}
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover"
+          width="78"
+          height="78"
           loading="lazy"
         />
       </div>

@@ -41,6 +41,8 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item, onCardClick }) => {
         <img
           src={item.imageUrl}
           alt={item.name}
+          width="208"
+          height="86"
           className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-200"
           loading="lazy"
         />
@@ -49,7 +51,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item, onCardClick }) => {
       {/* Card Details below image */}
       <div className="px-2.5 pt-1.5 pb-2 relative flex flex-col justify-between">
         {/* Item Title */}
-        <h3 className="text-[12px] font-bold text-[#0F172A] tracking-tight leading-snug whitespace-nowrap">
+        <h3 className="text-[12px] font-bold text-[#0F172A] tracking-tight leading-snug whitespace-nowrap truncate min-h-[18px]">
           {item.name}
         </h3>
 

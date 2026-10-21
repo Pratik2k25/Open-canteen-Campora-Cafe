@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCanteen } from '../../context/CanteenContext.tsx';
 import {
   getVegTransitionVisualConfig,
   VEG_TRANSITION_TIMING,
@@ -128,6 +129,7 @@ export interface VegModeTransitionProps {
   targetVegOnly: boolean;
   runId: number;
   origin?: VegTransitionOrigin | null;
+  brandName?: string;
 }
 
 /**
@@ -140,12 +142,24 @@ export const VegModeTransitionOverlay: React.FC<VegModeTransitionProps> = ({
   targetVegOnly,
   runId,
   origin,
+  brandName: propBrandName,
 }) => {
   if (phase === 'idle') {
     return null;
   }
 
-  const config = getVegTransitionVisualConfig(targetVegOnly);
+  // Dynamically resolve brand name from active CanteenConfig if not supplied via prop
+  let resolvedBrand = propBrandName;
+  try {
+    const { config: canteenConfig } = useCanteen();
+    if (!resolvedBrand && canteenConfig?.identity?.displayName) {
+      resolvedBrand = canteenConfig.identity.displayName;
+    }
+  } catch {
+    // Graceful fallback if rendered outside CanteenProvider (e.g. isolated test environments)
+  }
+
+  const config = getVegTransitionVisualConfig(targetVegOnly, resolvedBrand);
   const originX = origin ? `${Math.round(origin.x)}px` : 'calc(50% + 165px)';
   const originY = origin ? `${Math.round(origin.y)}px` : '232px';
 

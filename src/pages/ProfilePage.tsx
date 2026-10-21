@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCanteen } from '../context/CanteenContext.tsx';
 import {
   mockProfileDataProvider,
   getAvatarInitial,
@@ -11,6 +12,24 @@ import {
   readCanonicalVegPreference,
   writeCanonicalVegPreference,
 } from '../utils/vegModeTransition.ts';
+import {
+  STORAGE_KEYS,
+  LEGACY_STORAGE_KEYS,
+  storageValidators,
+  readScopedOrLegacy,
+  getOperatorStorageKey,
+  safeGetStorage,
+} from '../utils/storageKeys.ts';
+import { ProfilePageSkeleton } from '../components/skeleton/ProfilePageSkeleton.tsx';
+import { usePageReadiness } from '../hooks/usePageReadiness.ts';
+
+const isDialablePhone = (phone?: string): boolean => {
+  if (!phone) return false;
+  // Disallow mock vanity names (e.g., '+91 1800-CAMPORA') as dialable tel: links
+  if (/[a-zA-Z]/.test(phone)) return false;
+  const digits = phone.replace(/\D/g, '');
+  return digits.length >= 7;
+};
 
 type ActiveSheet =
   | null
@@ -20,10 +39,9 @@ type ActiveSheet =
   | 'appearance'
   | 'addressBook'
   | 'accountPrivacy'
+  | 'aboutCanteen'
   | 'aboutCampora'
   | 'logoutConfirm';
-
-const STORAGE_KEY = 'campora_mock_profile_v1';
 
 interface ProfilePageProps {
   onHeaderBack?: () => void;
@@ -36,21 +54,31 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onHomeClick,
   hideFloatingHomePill = false,
 }) => {
+  const { config } = useCanteen();
+  const operatorId = config.identity.id;
+  const activeOperatorRef = useRef(operatorId);
   const navigate = useNavigate();
+  const { isReady, showSkeleton } = usePageReadiness({ pageKey: 'profile' });
 
   const [profile, setProfile] = useState<CustomerProfileData>(() => {
-    let baseProfile = mockProfileDataProvider.getProfile();
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        baseProfile = JSON.parse(saved);
-      } catch {
-        baseProfile = mockProfileDataProvider.getProfile();
-      }
-    }
-    const syncedVegMode = readCanonicalVegPreference(baseProfile.vegMode);
+    const fallbackProfile = mockProfileDataProvider.getProfile();
+    const loaded = readScopedOrLegacy<CustomerProfileData>(
+      STORAGE_KEYS.PROFILE,
+      LEGACY_STORAGE_KEYS.PROFILE,
+      storageValidators.profile,
+      (val) => {
+        try {
+          return JSON.parse(val) as CustomerProfileData;
+        } catch {
+          return fallbackProfile;
+        }
+      },
+      fallbackProfile,
+      operatorId
+    );
+    const syncedVegMode = readCanonicalVegPreference(loaded.vegMode, undefined, operatorId);
     return {
-      ...baseProfile,
+      ...loaded,
       vegMode: syncedVegMode,
     };
   });
@@ -62,9 +90,43 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [editError, setEditError] = useState<string | null>(null);
   const [statusToast, setStatusToast] = useState<string | null>(null);
 
+  // Reload profile state cleanly when canteen operator changes at runtime
+  useEffect(() => {
+    const fallbackProfile = mockProfileDataProvider.getProfile();
+    const loaded = readScopedOrLegacy<CustomerProfileData>(
+      STORAGE_KEYS.PROFILE,
+      LEGACY_STORAGE_KEYS.PROFILE,
+      storageValidators.profile,
+      (val) => {
+        try {
+          return JSON.parse(val) as CustomerProfileData;
+        } catch {
+          return fallbackProfile;
+        }
+      },
+      fallbackProfile,
+      operatorId
+    );
+    const syncedVegMode = readCanonicalVegPreference(loaded.vegMode, undefined, operatorId);
+    setProfile({
+      ...loaded,
+      vegMode: syncedVegMode,
+    });
+    activeOperatorRef.current = operatorId;
+  }, [operatorId]);
+
   const persistProfile = (next: CustomerProfileData) => {
     setProfile(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    // Prevent in-flight state of previous operator from overwriting new operator's storage
+    if (activeOperatorRef.current !== operatorId) return;
+    const storage = safeGetStorage();
+    if (storage) {
+      const key = getOperatorStorageKey(STORAGE_KEYS.PROFILE, operatorId);
+      storage.setItem(key, JSON.stringify(next));
+      if (operatorId === 'campora-cafe') {
+        storage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(next));
+      }
+    }
   };
 
   const showToast = (msg: string) => {
@@ -77,7 +139,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const handleToggleVegMode = () => {
     const updated = mockProfileDataProvider.toggleVegMode(profile);
     persistProfile(updated);
-    writeCanonicalVegPreference(updated.vegMode);
+    writeCanonicalVegPreference(updated.vegMode, undefined, operatorId);
   };
 
   const openEditProfile = () => {
@@ -141,8 +203,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
   const avatarInitial = getAvatarInitial(profile.displayName);
 
+  if (showSkeleton) {
+    return (
+      <div className="min-h-screen bg-[#F5F8FB] text-[#111827] select-none flex flex-col items-center">
+        <div className="w-full max-w-[430px] min-h-screen bg-[#F5F8FB] relative flex flex-col pb-24">
+          <ProfilePageSkeleton onHeaderBack={onHeaderBack} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#F5F8FB] text-[#111827] select-none flex flex-col items-center">
+    <div className="min-h-screen bg-[#F5F8FB] text-[#111827] select-none flex flex-col items-center transition-opacity duration-200">
       <div className="w-full max-w-[430px] min-h-screen bg-[#F5F8FB] relative flex flex-col pb-24">
         {/* 1. DEDICATED MINIMAL PROFILE HEADER */}
         <header className="px-4 pt-3.5 pb-2.5 flex items-center gap-3.5 bg-[#F5F8FB]">
@@ -221,6 +293,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               src="/assets/profile/hero-food-illustration.png"
               alt="Campora Café noodles bowl, coffee cup, and chef hat artwork"
               referrerPolicy="no-referrer"
+              width="144"
+              height="98"
               className="absolute right-0 top-0 bottom-0 h-full w-[144px] object-cover object-right pointer-events-none select-none"
             />
           </section>
@@ -616,10 +690,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </div>
             <div className="border-b border-[#F1F5F9] ml-[50px]" />
 
-            {/* Row 1: About Campora Café */}
+            {/* Row 1: About Canteen */}
             <button
               type="button"
-              onClick={() => setActiveSheet('aboutCampora')}
+              onClick={() => setActiveSheet('aboutCanteen')}
               className="w-full py-2 flex items-center justify-between text-left hover:bg-neutral-50/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -638,7 +712,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 </div>
                 <div className="min-w-0">
                   <div className="text-[13.5px] font-bold text-[#111827] leading-snug">
-                    About Campora Café
+                    {config.content.aboutTitle}
                   </div>
                   <div className="text-[11.5px] font-normal text-[#64748B] mt-0.5">
                     Our story, values and more
@@ -834,17 +908,45 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <div className="flex flex-col gap-3">
                   <h3 className="text-[16px] font-bold text-[#111827]">Help & Support</h3>
                   <p className="text-[12.5px] text-[#64748B]">
-                    Need assistance with an active canteen order or campus delivery?
+                    Need assistance with an active order or canteen pickup?
                   </p>
                   <div className="bg-[#F8FAFC] rounded-xl p-3 flex flex-col gap-2 text-[12.5px]">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-[#64748B]">Canteen Counter Desk</span>
-                      <span className="font-bold text-[#111827]">+91 1800-CAMPORA</span>
+                      {config.contact.supportPhone ? (
+                        isDialablePhone(config.contact.supportPhone) ? (
+                          <a
+                            href={`tel:${config.contact.supportPhone.replace(/[^\d+]/g, '')}`}
+                            className="font-bold text-[#111827] hover:underline"
+                          >
+                            {config.contact.supportPhone}
+                          </a>
+                        ) : (
+                          <span className="font-bold text-[#111827]">
+                            {config.contact.supportPhone}
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-neutral-400 italic">Available at counter</span>
+                      )}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#64748B]">Support Email</span>
-                      <span className="font-bold text-[#111827]">help@camporacafe.in</span>
-                    </div>
+                    {config.contact.supportEmail ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#64748B]">Support Email</span>
+                        <a
+                          href={`mailto:${config.contact.supportEmail}`}
+                          className="font-bold text-[#111827] hover:underline"
+                        >
+                          {config.contact.supportEmail}
+                        </a>
+                      </div>
+                    ) : null}
+                    {config.contact.operatingHours ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#64748B]">Operating Hours</span>
+                        <span className="font-medium text-[#111827]">{config.contact.operatingHours}</span>
+                      </div>
+                    ) : null}
                   </div>
                   <button
                     type="button"
@@ -904,7 +1006,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <div className="flex flex-col gap-2.5">
                   <h3 className="text-[16px] font-bold text-[#111827]">Appearance</h3>
                   <p className="text-[12px] text-[#64748B] mb-1">
-                    Choose your preferred display theme for Campora Café
+                    Choose your preferred display theme for {config.identity.displayName}
                   </p>
                   {(['Light', 'Dark', 'System'] as AppearanceTheme[]).map((themeOption) => (
                     <button
@@ -962,8 +1064,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <div className="flex flex-col gap-3">
                   <h3 className="text-[16px] font-bold text-[#111827]">Account Privacy</h3>
                   <p className="text-[12.5px] text-[#64748B] leading-relaxed">
-                    Your order history, saved hostel addresses, and dietary preferences are stored
-                    solely for fulfilling your Campora Café orders on campus.
+                    {config.content.privacyNotice ??
+                      `Your order history, saved hostel addresses, and dietary preferences are stored solely for fulfilling your ${config.identity.displayName} orders on campus.`}
                   </p>
                   <button
                     type="button"
@@ -975,12 +1077,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 </div>
               )}
 
-              {activeSheet === 'aboutCampora' && (
+              {(activeSheet === 'aboutCanteen' || activeSheet === 'aboutCampora') && (
                 <div className="flex flex-col gap-3">
-                  <h3 className="text-[16px] font-bold text-[#111827]">About Campora Café</h3>
+                  <h3 className="text-[16px] font-bold text-[#111827]">{config.content.aboutTitle}</h3>
                   <p className="text-[12.5px] text-[#64748B] leading-relaxed">
-                    Good Food • Great Moods. Campora Café brings fresh, hygienic, and fast
-                    dine-in, takeaway, and hostel delivery meals crafted for campus life.
+                    {config.content.aboutBody}
                   </p>
                   <button
                     type="button"
@@ -994,7 +1095,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
               {activeSheet === 'logoutConfirm' && (
                 <div className="flex flex-col gap-3">
-                  <h3 className="text-[16px] font-bold text-[#111827]">Log out of Campora Café?</h3>
+                  <h3 className="text-[16px] font-bold text-[#111827]">
+                    Log out of {config.identity.displayName}?
+                  </h3>
                   <p className="text-[12.5px] text-[#64748B]">
                     You can sign back in anytime to view your past orders and saved preferences.
                   </p>

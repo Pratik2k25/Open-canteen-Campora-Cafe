@@ -132,3 +132,21 @@ export interface UserProfile {
   createdAt: string;
   preferences: UserPreferences;
 }
+
+// Re-export Canteen Configuration types (Stage 1 · Step 1.2 · Task 1.2.1)
+export type {
+  CanteenConfig,
+  CanteenConfigInput,
+  CanteenIdentity,
+  CanteenIdentityInput,
+  CanteenBranding,
+  CanteenBrandingInput,
+  CanteenLocation,
+  CanteenLocationInput,
+  CanteenContact,
+  CanteenContactInput,
+  CanteenContent,
+  CanteenContentInput,
+  CanteenPWA,
+  CanteenPWAInput,
+} from '../config/canteenConfig.ts';

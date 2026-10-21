@@ -14,11 +14,13 @@ export default defineConfig(() => {
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: '/',
-          name: 'Campora Café',
-          short_name: 'Campora',
-          description: 'Android-first food ordering Progressive Web App for Campora Café single-canteen service.',
-          theme_color: '#FF5C38',
-          background_color: '#12151B',
+          name: process.env.VITE_CANTEEN_APP_NAME || 'Campora Café',
+          short_name: process.env.VITE_CANTEEN_SHORT_NAME || 'Campora',
+          description:
+            process.env.VITE_CANTEEN_DESCRIPTION ||
+            'Android-first food ordering Progressive Web App for Campora Café single-canteen service.',
+          theme_color: process.env.VITE_CANTEEN_THEME_COLOR || '#FF5C38',
+          background_color: process.env.VITE_CANTEEN_BG_COLOR || '#12151B',
           display: 'standalone',
           start_url: '/',
           scope: '/',

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { UserProfile, UserPreferences } from '../types/index.ts';
 import { auth, db, handleFirestoreError, OperationType } from '../config/firebase.ts';
 import {
@@ -12,6 +12,15 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useCanteen } from './CanteenContext.tsx';
+import {
+  STORAGE_KEYS,
+  LEGACY_STORAGE_KEYS,
+  storageValidators,
+  readScopedOrLegacy,
+  getOperatorStorageKey,
+  safeGetStorage,
+} from '../utils/storageKeys.ts';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -33,17 +42,20 @@ const defaultPreferences: UserPreferences = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(() => {
-    const saved = localStorage.getItem('campora_user');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return null;
-      }
+  let operatorId = 'campora-cafe';
+  try {
+    const { config } = useCanteen();
+    if (config?.identity?.id) {
+      operatorId = config.identity.id;
     }
-    // Default guest customer profile
-    return {
+  } catch {
+    // Safe fallback for isolated test harnesses
+  }
+
+  const activeOperatorRef = useRef(operatorId);
+
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    const defaultGuest: UserProfile = {
       uid: 'customer-demo-1',
       displayName: 'Pratik Kumar',
       email: 'devlopwithpratik@gmail.com',
@@ -51,9 +63,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
       preferences: defaultPreferences,
     };
+    return readScopedOrLegacy<UserProfile | null>(
+      STORAGE_KEYS.USER,
+      LEGACY_STORAGE_KEYS.USER,
+      storageValidators.user,
+      (val) => {
+        try {
+          return JSON.parse(val) as UserProfile;
+        } catch {
+          return defaultGuest;
+        }
+      },
+      defaultGuest,
+      operatorId
+    );
   });
 
   const [loading, setLoading] = useState(false);
+
+  // Reload user state cleanly when canteen operator changes at runtime
+  useEffect(() => {
+    const defaultGuest: UserProfile = {
+      uid: 'customer-demo-1',
+      displayName: 'Pratik Kumar',
+      email: 'devlopwithpratik@gmail.com',
+      phoneNumber: '+91 98765 43210',
+      createdAt: new Date().toISOString(),
+      preferences: defaultPreferences,
+    };
+    const loaded = readScopedOrLegacy<UserProfile | null>(
+      STORAGE_KEYS.USER,
+      LEGACY_STORAGE_KEYS.USER,
+      storageValidators.user,
+      (val) => {
+        try {
+          return JSON.parse(val) as UserProfile;
+        } catch {
+          return defaultGuest;
+        }
+      },
+      defaultGuest,
+      operatorId
+    );
+    setUser(loaded);
+    activeOperatorRef.current = operatorId;
+  }, [operatorId]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -80,12 +134,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         setUser(profile);
-        localStorage.setItem('campora_user', JSON.stringify(profile));
+        if (activeOperatorRef.current === operatorId) {
+          const storage = safeGetStorage();
+          if (storage) {
+            const scopedKey = getOperatorStorageKey(STORAGE_KEYS.USER, operatorId);
+            storage.setItem(scopedKey, JSON.stringify(profile));
+            if (operatorId === 'campora-cafe') {
+              storage.setItem(STORAGE_KEYS.USER, JSON.stringify(profile));
+            }
+          }
+        }
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [operatorId]);
 
   const loginWithEmail = async (email: string, pass: string) => {
     setLoading(true);
@@ -99,7 +162,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         preferences: defaultPreferences,
       };
       setUser(profile);
-      localStorage.setItem('campora_user', JSON.stringify(profile));
+      const storage = safeGetStorage();
+      if (storage) {
+        storage.setItem(STORAGE_KEYS.USER, JSON.stringify(profile));
+      }
     } catch (err) {
       console.error('Email login error:', err);
       throw err;
@@ -138,7 +204,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUser(profile);
-      localStorage.setItem('campora_user', JSON.stringify(profile));
+      const storage = safeGetStorage();
+      if (storage) {
+        storage.setItem(STORAGE_KEYS.USER, JSON.stringify(profile));
+      }
     } catch (err) {
       console.error('Signup error:', err);
       throw err;
@@ -178,7 +247,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUser(profile);
-      localStorage.setItem('campora_user', JSON.stringify(profile));
+      const storage = safeGetStorage();
+      if (storage) {
+        storage.setItem(STORAGE_KEYS.USER, JSON.stringify(profile));
+      }
     } catch (err) {
       console.error('Google Sign-in error:', err);
       throw err;
@@ -190,7 +262,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     await signOut(auth);
     setUser(null);
-    localStorage.removeItem('campora_user');
+    const storage = safeGetStorage();
+    if (storage) {
+      storage.removeItem?.(STORAGE_KEYS.USER);
+      storage.removeItem?.(LEGACY_STORAGE_KEYS.USER);
+    }
   };
 
   const resetPassword = async (email: string) => {
@@ -207,7 +283,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     };
     setUser(updated);
-    localStorage.setItem('campora_user', JSON.stringify(updated));
+    if (activeOperatorRef.current === operatorId) {
+      const storage = safeGetStorage();
+      if (storage) {
+        const scopedKey = getOperatorStorageKey(STORAGE_KEYS.USER, operatorId);
+        storage.setItem(scopedKey, JSON.stringify(updated));
+        if (operatorId === 'campora-cafe') {
+          storage.setItem(STORAGE_KEYS.USER, JSON.stringify(updated));
+        }
+      }
+    }
 
     try {
       await setDoc(

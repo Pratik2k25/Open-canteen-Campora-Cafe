@@ -152,13 +152,27 @@
   animation: camporaVegEmblemPop 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+@keyframes camporaShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: camporaShimmer 1.4s infinite ease-in-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-cart-receive,
   .animate-badge-pop,
   .animate-veg-ripple-outer,
   .animate-veg-ripple-mid,
   .animate-veg-ripple-inner,
-  .animate-veg-emblem {
+  .animate-veg-emblem,
+  .animate-shimmer {
     animation: none !important;
   }
 }

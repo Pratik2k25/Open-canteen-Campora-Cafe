@@ -56,6 +56,28 @@ test('Visual config matches approved MP4 for both VEG ON and VEG OFF directions'
   );
 });
 
+test('Task 1.2.5: getVegTransitionVisualConfig parameterizes brandFooter dynamically', () => {
+  // Default fallback (no brand passed)
+  const defaultCfg = getVegTransitionVisualConfig(true);
+  assert.equal(defaultCfg.brandFooter, 'CAMPORA CAFÉ');
+
+  // Open Canteen
+  const openCanteenCfg = getVegTransitionVisualConfig(true, 'Open Canteen');
+  assert.equal(openCanteenCfg.brandFooter, 'OPEN CANTEEN');
+
+  // My Home
+  const myHomeCfg = getVegTransitionVisualConfig(false, 'My Home');
+  assert.equal(myHomeCfg.brandFooter, 'MY HOME');
+
+  // Accented names
+  const accentedCfg = getVegTransitionVisualConfig(true, 'Café De L\'Étoile');
+  assert.equal(accentedCfg.brandFooter, 'CAFÉ DE L\'ÉTOILE');
+
+  // Whitespace trimming
+  const trimmedCfg = getVegTransitionVisualConfig(false, '  Campus Bites  ');
+  assert.equal(trimmedCfg.brandFooter, 'CAMPUS BITES');
+});
+
 test('Test A & B: filterMenuItemsForHome hides non-veg items when VEG ON and restores eligible non-veg items when VEG OFF', () => {
   const mixedItems = filterMenuItemsForHome(MENU_ITEMS, {
     searchQuery: '',

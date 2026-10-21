@@ -26,6 +26,8 @@ import {
   VEG_TRANSITION_TIMING,
   type VegTransitionOrigin,
 } from '../utils/vegModeTransition.ts';
+import { HomePageSkeleton } from '../components/skeleton/HomePageSkeleton.tsx';
+import { usePageReadiness } from '../hooks/usePageReadiness.ts';
 import type { MenuItem } from '../types/index.ts';
 
 interface HomePageProps {
@@ -33,6 +35,7 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => {
+  const { isReady, showSkeleton } = usePageReadiness({ pageKey: 'home' });
   const { serviceMode } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -149,8 +152,19 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
 
   const isTransitionActive = vegMachine.phase !== 'idle';
 
+  if (showSkeleton) {
+    return (
+      <div className="min-h-screen bg-[#FFFFFF] text-neutral-900 pb-28 flex flex-col items-center">
+        <div className="w-full max-w-[430px] min-h-screen bg-[#FFFFFF] flex flex-col relative shadow-sm">
+          <HomePageSkeleton />
+          {!hideBottomNav && <BottomNavigation />}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#FFFFFF] text-neutral-900 pb-28 flex flex-col items-center">
+    <div className="min-h-screen bg-[#FFFFFF] text-neutral-900 pb-28 flex flex-col items-center transition-opacity duration-200">
       {/* Mobile Wrapper enforcing Android mobile proportion */}
       <div className="w-full max-w-[430px] min-h-screen bg-[#FFFFFF] flex flex-col relative shadow-sm">
         {/* Offline indicator */}

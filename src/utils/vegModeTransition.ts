@@ -1,6 +1,7 @@
 import type { MenuItem, ServiceMode } from '../types/index.ts';
 import type { FilterKey } from '../components/FilterChips.tsx';
 import type { CustomerProfileData } from './profileData.ts';
+import { getOperatorStorageKey } from './storageKeys.ts';
 
 export type VegTransitionPhase = 'idle' | 'covering' | 'covered' | 'revealing';
 
@@ -87,8 +88,18 @@ export const VEG_TRANSITION_CONFIGS: Record<VegTransitionDirection, VegTransitio
   },
 };
 
-export function getVegTransitionVisualConfig(targetVegOnly: boolean): VegTransitionVisualConfig {
-  return targetVegOnly ? VEG_TRANSITION_CONFIGS['veg-on'] : VEG_TRANSITION_CONFIGS['veg-off'];
+export function getVegTransitionVisualConfig(
+  targetVegOnly: boolean,
+  brandName?: string
+): VegTransitionVisualConfig {
+  const base = targetVegOnly ? VEG_TRANSITION_CONFIGS['veg-on'] : VEG_TRANSITION_CONFIGS['veg-off'];
+  if (brandName && brandName.trim()) {
+    return {
+      ...base,
+      brandFooter: brandName.trim().toUpperCase(),
+    };
+  }
+  return base;
 }
 
 export interface HomeMenuFilterCriteria {
@@ -162,9 +173,12 @@ export function syncVegFilterChip(
   return activeFilters.filter((key) => key !== 'vegOnly');
 }
 
-export const VEG_PREFERENCE_STORAGE_KEY = 'campora_veg_only';
-export const MOCK_PROFILE_STORAGE_KEY = 'campora_mock_profile_v1';
-export const VEG_PREFERENCE_EVENT_NAME = 'campora-veg-preference-change';
+export const VEG_PREFERENCE_STORAGE_KEY = 'opencanteen_veg_only';
+export const LEGACY_VEG_PREFERENCE_STORAGE_KEY = 'campora_veg_only';
+export const MOCK_PROFILE_STORAGE_KEY = 'opencanteen_profile_v1';
+export const LEGACY_MOCK_PROFILE_STORAGE_KEY = 'campora_mock_profile_v1';
+export const VEG_PREFERENCE_EVENT_NAME = 'opencanteen:veg-preference-change';
+export const LEGACY_VEG_PREFERENCE_EVENT_NAME = 'campora-veg-preference-change';
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -180,19 +194,49 @@ function getDefaultStorage(): StorageLike | null {
 
 /**
  * Reads the canonical VEG preference shared between Home and Profile.
+ * Supports operator-level partitioning so independent canteens do not leak dietary preferences.
  * Defaults to `defaultFallback` (`false` on Home initial load) when no explicit preference has been stored yet.
  */
 export function readCanonicalVegPreference(
   defaultFallback = false,
-  storage: StorageLike | null = getDefaultStorage()
+  storage: StorageLike | null = getDefaultStorage(),
+  operatorId?: string
 ): boolean {
   if (!storage) return defaultFallback;
 
-  const rawVeg = storage.getItem(VEG_PREFERENCE_STORAGE_KEY);
+  // 1. If operatorId provided, check operator-partitioned key first
+  if (operatorId) {
+    const partitionedVegKey = getOperatorStorageKey(VEG_PREFERENCE_STORAGE_KEY, operatorId);
+    const rawPartitioned = storage.getItem(partitionedVegKey);
+    if (rawPartitioned === 'true') return true;
+    if (rawPartitioned === 'false') return false;
+
+    // Check partitioned profile
+    const partitionedProfileKey = getOperatorStorageKey(MOCK_PROFILE_STORAGE_KEY, operatorId);
+    const rawPartitionedProfile = storage.getItem(partitionedProfileKey);
+    if (rawPartitionedProfile) {
+      try {
+        const parsed = JSON.parse(rawPartitionedProfile) as Partial<CustomerProfileData>;
+        if (typeof parsed.vegMode === 'boolean') {
+          return parsed.vegMode;
+        }
+      } catch {
+        // Ignore
+      }
+    }
+
+    // For non-campora canteens, do NOT inherit legacy campora data
+    if (operatorId !== 'campora-cafe') {
+      return defaultFallback;
+    }
+  }
+
+  // 2. Fallbacks for campora-cafe or unpartitioned default
+  const rawVeg = storage.getItem(VEG_PREFERENCE_STORAGE_KEY) ?? storage.getItem(LEGACY_VEG_PREFERENCE_STORAGE_KEY);
   if (rawVeg === 'true') return true;
   if (rawVeg === 'false') return false;
 
-  const rawProfile = storage.getItem(MOCK_PROFILE_STORAGE_KEY);
+  const rawProfile = storage.getItem(MOCK_PROFILE_STORAGE_KEY) ?? storage.getItem(LEGACY_MOCK_PROFILE_STORAGE_KEY);
   if (rawProfile) {
     try {
       const parsed = JSON.parse(rawProfile) as Partial<CustomerProfileData>;
@@ -208,35 +252,67 @@ export function readCanonicalVegPreference(
 }
 
 /**
- * Writes the canonical VEG preference and synchronizes both `campora_veg_only`
- * and `campora_mock_profile_v1` so Home and Profile always reflect the exact same state.
+ * Writes the canonical VEG preference and synchronizes operator-scoped keys,
+ * canonical keys, and legacy keys so Home and Profile reflect the exact state without cross-canteen leakage.
  */
 export function writeCanonicalVegPreference(
   nextVegOnly: boolean,
-  storage: StorageLike | null = getDefaultStorage()
+  storage: StorageLike | null = getDefaultStorage(),
+  operatorId?: string
 ): void {
   if (!storage) return;
 
-  storage.setItem(VEG_PREFERENCE_STORAGE_KEY, String(nextVegOnly));
+  if (operatorId) {
+    const partitionedVegKey = getOperatorStorageKey(VEG_PREFERENCE_STORAGE_KEY, operatorId);
+    storage.setItem(partitionedVegKey, String(nextVegOnly));
 
-  const rawProfile = storage.getItem(MOCK_PROFILE_STORAGE_KEY);
-  if (rawProfile) {
+    const partitionedProfileKey = getOperatorStorageKey(MOCK_PROFILE_STORAGE_KEY, operatorId);
+    const rawPartitionedProfile = storage.getItem(partitionedProfileKey);
+    if (rawPartitionedProfile) {
+      try {
+        const parsed = JSON.parse(rawPartitionedProfile) as CustomerProfileData;
+        storage.setItem(partitionedProfileKey, JSON.stringify({ ...parsed, vegMode: nextVegOnly }));
+      } catch {
+        // Ignore
+      }
+    }
+  }
+
+  // Also maintain canonical/legacy keys when operator is campora-cafe or omitted
+  if (!operatorId || operatorId === 'campora-cafe') {
+    storage.setItem(VEG_PREFERENCE_STORAGE_KEY, String(nextVegOnly));
     try {
-      const parsed = JSON.parse(rawProfile) as CustomerProfileData;
-      const updatedProfile: CustomerProfileData = {
-        ...parsed,
-        vegMode: nextVegOnly,
-      };
-      storage.setItem(MOCK_PROFILE_STORAGE_KEY, JSON.stringify(updatedProfile));
+      storage.setItem(LEGACY_VEG_PREFERENCE_STORAGE_KEY, String(nextVegOnly));
     } catch {
-      // Ignore malformed profile JSON
+      // Non-critical
+    }
+
+    const rawProfile = storage.getItem(MOCK_PROFILE_STORAGE_KEY) ?? storage.getItem(LEGACY_MOCK_PROFILE_STORAGE_KEY);
+    if (rawProfile) {
+      try {
+        const parsed = JSON.parse(rawProfile) as CustomerProfileData;
+        const updatedProfile: CustomerProfileData = {
+          ...parsed,
+          vegMode: nextVegOnly,
+        };
+        const serialized = JSON.stringify(updatedProfile);
+        storage.setItem(MOCK_PROFILE_STORAGE_KEY, serialized);
+        storage.setItem(LEGACY_MOCK_PROFILE_STORAGE_KEY, serialized);
+      } catch {
+        // Ignore malformed profile JSON
+      }
     }
   }
 
   if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(
-      new CustomEvent<{ vegOnly: boolean }>(VEG_PREFERENCE_EVENT_NAME, {
-        detail: { vegOnly: nextVegOnly },
+      new CustomEvent<{ vegOnly: boolean; operatorId?: string }>(VEG_PREFERENCE_EVENT_NAME, {
+        detail: { vegOnly: nextVegOnly, operatorId },
+      })
+    );
+    window.dispatchEvent(
+      new CustomEvent<{ vegOnly: boolean; operatorId?: string }>(LEGACY_VEG_PREFERENCE_EVENT_NAME, {
+        detail: { vegOnly: nextVegOnly, operatorId },
       })
     );
   }

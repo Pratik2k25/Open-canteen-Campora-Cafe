@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { CartItem, MenuItem, PriceBreakdown, ServiceMode } from '../types/index.ts';
 import { calculatePricing } from '../utils/pricing.ts';
 import { findIncompatibleCartItems, sanitizeCartForServiceMode } from '../utils/serviceRules.ts';
@@ -6,6 +6,15 @@ import {
   getFlightTargetOffsetForItem,
   resolveMenuItemCartVisual,
 } from '../utils/floatingCartState.ts';
+import { useCanteen } from './CanteenContext.tsx';
+import {
+  STORAGE_KEYS,
+  LEGACY_STORAGE_KEYS,
+  storageValidators,
+  readScopedOrLegacy,
+  getOperatorStorageKey,
+  safeGetStorage,
+} from '../utils/storageKeys.ts';
 
 export interface FlightPayload {
   id: string;
@@ -44,20 +53,44 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  let operatorId = 'campora-cafe';
+  try {
+    const { config } = useCanteen();
+    if (config?.identity?.id) {
+      operatorId = config.identity.id;
+    }
+  } catch {
+    // Graceful fallback for test harnesses outside CanteenProvider
+  }
+
+  const activeOperatorRef = useRef(operatorId);
+
   const [serviceMode, setServiceModeState] = useState<ServiceMode>(() => {
-    return (localStorage.getItem('campora_service_mode') as ServiceMode) || 'dinein';
+    return readScopedOrLegacy<ServiceMode>(
+      STORAGE_KEYS.SERVICE_MODE,
+      LEGACY_STORAGE_KEYS.SERVICE_MODE,
+      storageValidators.serviceMode,
+      (val) => val as ServiceMode,
+      'dinein',
+      operatorId
+    );
   });
 
   const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('campora_cart');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return [];
-      }
-    }
-    return [];
+    return readScopedOrLegacy<CartItem[]>(
+      STORAGE_KEYS.CART,
+      LEGACY_STORAGE_KEYS.CART,
+      storageValidators.cart,
+      (val) => {
+        try {
+          return JSON.parse(val) as CartItem[];
+        } catch {
+          return [];
+        }
+      },
+      [],
+      operatorId
+    );
   });
 
   const [activeFlight, setActiveFlight] = useState<FlightPayload | null>(null);
@@ -68,13 +101,61 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     incompatibleItems: CartItem[];
   } | null>(null);
 
+  // Reload cart state cleanly when canteen operator changes at runtime
   useEffect(() => {
-    localStorage.setItem('campora_cart', JSON.stringify(items));
-  }, [items]);
+    const loadedItems = readScopedOrLegacy<CartItem[]>(
+      STORAGE_KEYS.CART,
+      LEGACY_STORAGE_KEYS.CART,
+      storageValidators.cart,
+      (val) => {
+        try {
+          return JSON.parse(val) as CartItem[];
+        } catch {
+          return [];
+        }
+      },
+      [],
+      operatorId
+    );
+    setItems(loadedItems);
+
+    const loadedMode = readScopedOrLegacy<ServiceMode>(
+      STORAGE_KEYS.SERVICE_MODE,
+      LEGACY_STORAGE_KEYS.SERVICE_MODE,
+      storageValidators.serviceMode,
+      (val) => val as ServiceMode,
+      'dinein',
+      operatorId
+    );
+    setServiceModeState(loadedMode);
+    activeOperatorRef.current = operatorId;
+  }, [operatorId]);
 
   useEffect(() => {
-    localStorage.setItem('campora_service_mode', serviceMode);
-  }, [serviceMode]);
+    // Guard: Prevent previous operator's in-memory items from overwriting new operator's storage
+    if (activeOperatorRef.current !== operatorId) return;
+    const storage = safeGetStorage();
+    if (storage) {
+      const scopedKey = getOperatorStorageKey(STORAGE_KEYS.CART, operatorId);
+      storage.setItem(scopedKey, JSON.stringify(items));
+      if (operatorId === 'campora-cafe') {
+        storage.setItem(STORAGE_KEYS.CART, JSON.stringify(items));
+      }
+    }
+  }, [items, operatorId]);
+
+  useEffect(() => {
+    // Guard: Prevent previous operator's in-memory mode from overwriting new operator's storage
+    if (activeOperatorRef.current !== operatorId) return;
+    const storage = safeGetStorage();
+    if (storage) {
+      const scopedKey = getOperatorStorageKey(STORAGE_KEYS.SERVICE_MODE, operatorId);
+      storage.setItem(scopedKey, serviceMode);
+      if (operatorId === 'campora-cafe') {
+        storage.setItem(STORAGE_KEYS.SERVICE_MODE, serviceMode);
+      }
+    }
+  }, [serviceMode, operatorId]);
 
   const pricing = calculatePricing(items, serviceMode);
 

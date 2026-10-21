@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { Order, ServiceMode, CartItem, PriceBreakdown } from '../types/index.ts';
 import { useAuth } from './AuthContext.tsx';
 import { db, handleFirestoreError, OperationType } from '../config/firebase.ts';
@@ -13,6 +13,15 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { MENU_ITEMS } from '../data/menuData.ts';
+import { useCanteen } from './CanteenContext.tsx';
+import {
+  STORAGE_KEYS,
+  LEGACY_STORAGE_KEYS,
+  storageValidators,
+  readScopedOrLegacy,
+  getOperatorStorageKey,
+  safeGetStorage,
+} from '../utils/storageKeys.ts';
 
 interface PlaceOrderParams {
   serviceMode: ServiceMode;
@@ -481,26 +490,72 @@ export const SEED_ORDERS: Order[] = [
   },
 ];
 
-const STORAGE_KEY = 'campora_orders_v2';
-
 export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  let operatorId = 'campora-cafe';
+  try {
+    const { config } = useCanteen();
+    if (config?.identity?.id) {
+      operatorId = config.identity.id;
+    }
+  } catch {
+    // Safe fallback when rendered in isolated test harness
+  }
+
+  const activeOperatorRef = useRef(operatorId);
+
   const [loadingOrders, setLoadingOrders] = useState<boolean>(false);
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return SEED_ORDERS;
-      }
-    }
-    return SEED_ORDERS;
+    const initialFallback = operatorId === 'campora-cafe' ? SEED_ORDERS : [];
+    return readScopedOrLegacy<Order[]>(
+      STORAGE_KEYS.ORDERS,
+      LEGACY_STORAGE_KEYS.ORDERS,
+      storageValidators.orders,
+      (val) => {
+        try {
+          return JSON.parse(val) as Order[];
+        } catch {
+          return initialFallback;
+        }
+      },
+      initialFallback,
+      operatorId
+    );
   });
 
+  // Reload orders cleanly when canteen operator changes at runtime
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-  }, [orders]);
+    const fallbackOrders = operatorId === 'campora-cafe' ? SEED_ORDERS : [];
+    const loadedOrders = readScopedOrLegacy<Order[]>(
+      STORAGE_KEYS.ORDERS,
+      LEGACY_STORAGE_KEYS.ORDERS,
+      storageValidators.orders,
+      (val) => {
+        try {
+          return JSON.parse(val) as Order[];
+        } catch {
+          return fallbackOrders;
+        }
+      },
+      fallbackOrders,
+      operatorId
+    );
+    setOrders(loadedOrders);
+    activeOperatorRef.current = operatorId;
+  }, [operatorId]);
+
+  useEffect(() => {
+    // Guard: Prevent previous operator's in-memory orders from overwriting new operator's storage
+    if (activeOperatorRef.current !== operatorId) return;
+    const storage = safeGetStorage();
+    if (storage) {
+      const scopedKey = getOperatorStorageKey(STORAGE_KEYS.ORDERS, operatorId);
+      storage.setItem(scopedKey, JSON.stringify(orders));
+      if (operatorId === 'campora-cafe') {
+        storage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+      }
+    }
+  }, [orders, operatorId]);
 
   // Real-time Firestore listener if user is authenticated with a real Firebase account
   useEffect(() => {

@@ -4,6 +4,8 @@ import { Header } from '../components/Header.tsx';
 import { BottomNavigation } from '../components/BottomNavigation.tsx';
 import { OfflineIndicator } from '../components/OfflineIndicator.tsx';
 import { OrderCard } from '../components/OrderCard.tsx';
+import { OrderHistorySkeleton } from '../components/skeleton/OrderHistorySkeleton.tsx';
+import { usePageReadiness } from '../hooks/usePageReadiness.ts';
 import { useOrders } from '../context/OrderContext.tsx';
 import {
   filterOrdersByTab,
@@ -19,7 +21,11 @@ interface OrdersPageProps {
 export const OrdersPage: React.FC<OrdersPageProps> = ({ hideBottomNav = false }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { orders } = useOrders();
+  const { orders, loadingOrders } = useOrders();
+  const { isReady, showSkeleton } = usePageReadiness({
+    pageKey: 'orders',
+    isDataReady: !loadingOrders,
+  });
   const [activeTab, setActiveTab] = useState<OrderHistoryTab>('all');
 
   // Support explicit ?empty=1 or ?state=empty preview parameter as well as actual empty orders array
@@ -41,8 +47,19 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ hideBottomNav = false })
   const displayedOrders = filterOrdersByTab(effectiveOrders, activeTab);
   const isEmptyState = displayedOrders.length === 0;
 
+  if (showSkeleton || (loadingOrders && !isReady)) {
+    return (
+      <div className="min-h-screen bg-[#FCFCFC] text-neutral-900 pb-24 select-none flex flex-col items-center">
+        <div className="w-full max-w-[430px] min-h-screen bg-[#FCFCFC] relative shadow-sm flex flex-col">
+          <OrderHistorySkeleton />
+          {!hideBottomNav && <BottomNavigation />}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#FCFCFC] text-neutral-900 pb-24 select-none flex flex-col items-center">
+    <div className="min-h-screen bg-[#FCFCFC] text-neutral-900 pb-24 select-none flex flex-col items-center transition-opacity duration-200">
       <div className="w-full max-w-[430px] min-h-screen bg-[#FCFCFC] relative shadow-sm flex flex-col">
         <OfflineIndicator />
 

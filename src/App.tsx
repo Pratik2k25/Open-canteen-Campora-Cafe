@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { CanteenProvider } from './context/CanteenContext.tsx';
+import { CanteenMetadataSync } from './components/CanteenMetadataSync.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { CartProvider } from './context/CartContext.tsx';
 import { OrderProvider } from './context/OrderContext.tsx';
@@ -12,10 +14,12 @@ import { PlaceholderPage } from './pages/PlaceholderPage.tsx';
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <OrderProvider>
-            <Routes>
+      <CanteenProvider>
+        <CanteenMetadataSync />
+        <AuthProvider>
+          <CartProvider>
+            <OrderProvider>
+              <Routes>
               {/* Coordinated spatial navigation shell across Home, Orders, Profile, and other screens */}
               <Route element={<CustomerNavigationShell />}>
                 {/* Home Page (Approved and Design-Locked) */}
@@ -74,6 +78,7 @@ export default function App() {
           </OrderProvider>
         </CartProvider>
       </AuthProvider>
-    </BrowserRouter>
-  );
+    </CanteenProvider>
+  </BrowserRouter>
+);
 }
