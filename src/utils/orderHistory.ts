@@ -18,13 +18,30 @@ export interface ServiceBadgeConfig {
 }
 
 /**
- * Filters orders based on the selected Order History tab ('all' vs 'cancelled').
+ * Sorts orders chronologically in descending order (newest orders first).
+ */
+export function sortOrdersByDateDesc(orders: Order[]): Order[] {
+  return [...orders].sort((a, b) => {
+    const timeA = new Date(a.createdAt).getTime();
+    const timeB = new Date(b.createdAt).getTime();
+    if (!Number.isNaN(timeA) && !Number.isNaN(timeB) && timeA !== timeB) {
+      return timeB - timeA;
+    }
+    const numA = parseInt(a.orderId.replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt(b.orderId.replace(/\D/g, ''), 10) || 0;
+    return numB - numA;
+  });
+}
+
+/**
+ * Filters and sorts orders based on the selected Order History tab ('all' vs 'cancelled').
  */
 export function filterOrdersByTab(orders: Order[], tab: OrderHistoryTab): Order[] {
+  const sorted = sortOrdersByDateDesc(orders);
   if (tab === 'cancelled') {
-    return orders.filter((order) => order.orderStatus === 'cancelled');
+    return sorted.filter((order) => order.orderStatus === 'cancelled');
   }
-  return orders;
+  return sorted;
 }
 
 /**
@@ -59,11 +76,32 @@ export function formatOrderTabLabel(
 export function getOrderStatusBadgeConfig(status: OrderStatus): StatusBadgeConfig {
   switch (status) {
     case 'placed':
+      return {
+        label: 'Placed',
+        bgHex: '#E0F2FE',
+        textHex: '#0369A1',
+        iconColorHex: '#0284C7',
+        iconType: 'clock',
+      };
     case 'confirmed':
+      return {
+        label: 'Confirmed',
+        bgHex: '#E0F2FE',
+        textHex: '#0369A1',
+        iconColorHex: '#0284C7',
+        iconType: 'clock',
+      };
     case 'preparing':
+      return {
+        label: 'Preparing',
+        bgHex: '#FFF0E0',
+        textHex: '#E06500',
+        iconColorHex: '#E06500',
+        iconType: 'clock',
+      };
     case 'ready':
       return {
-        label: status === 'preparing' ? 'Preparing' : status === 'ready' ? 'Ready' : 'Preparing',
+        label: 'Ready',
         bgHex: '#FFF0E0',
         textHex: '#E06500',
         iconColorHex: '#E06500',

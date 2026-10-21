@@ -14,6 +14,9 @@ export function computeNavState(pathname: string): NavState {
   const isProfileActive = pathname === '/profile' || pathname.startsWith('/profile/');
   const isOrderActive = pathname === '/orders' || pathname.startsWith('/orders/');
   const isCartActive = pathname === '/cart' || pathname.startsWith('/cart/');
+  const isCheckoutActive = pathname === '/checkout' || pathname.startsWith('/checkout/');
+  const isConfirmationActive =
+    pathname === '/order-confirmation' || pathname.startsWith('/order-confirmation/');
   const isHomeActive = pathname === '/';
 
   let currentTab: NavTab = 'other';
@@ -27,8 +30,9 @@ export function computeNavState(pathname: string): NavState {
     isOrderActive,
     isProfileActive,
     isCartActive,
-    // BottomNav is strictly hidden on /profile and /cart (Cart has its own sticky checkout action bar)
-    showBottomNav: !isProfileActive && !isCartActive,
+    // BottomNav is strictly hidden on /profile, /cart, /checkout, and /order-confirmation
+    showBottomNav:
+      !isProfileActive && !isCartActive && !isCheckoutActive && !isConfirmationActive,
     sliderPosition: isOrderActive ? 1 : 0,
   };
 }

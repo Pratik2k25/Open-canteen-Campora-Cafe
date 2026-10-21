@@ -1,5 +1,5 @@
 import type { IOrderAdapter, PlaceOrderParams } from './types.ts';
-import type { Order } from '../types/index.ts';
+import type { Order, PaymentStatus } from '../types/index.ts';
 import { CAMPORA_SEED_ORDERS } from '../data/mock/index.ts';
 import {
   STORAGE_KEYS,
@@ -114,10 +114,22 @@ export class MockOrderAdapter implements IOrderAdapter {
         .map((ci) => `${ci.item?.name || 'Item'} (x${ci.quantity})`)
         .join(', ');
 
+      // Derive customer name from submitted parameter, auth user, or clean fallback
+      const submittedName = params.customerName?.trim();
+      const defaultFallbackName = operatorId === 'campora-cafe' ? 'Pratik Kumar' : 'Guest Customer';
+      const userDisplayName = submittedName || user?.displayName || defaultFallbackName;
+
+      // Determine realistic demo payment status
+      const isCash =
+        params.paymentMethod.toLowerCase().includes('cash') ||
+        params.paymentMethod.toLowerCase().includes('counter') ||
+        params.paymentMethod.toLowerCase().includes('delivery');
+      const paymentStatus: PaymentStatus = isCash ? 'pending' : 'simulated';
+
       const newOrder: Order = {
         orderId,
         userId: user?.uid || 'customer-demo-1',
-        userDisplayName: user?.displayName || 'Pratik Kumar',
+        userDisplayName,
         serviceMode: params.serviceMode,
         items: params.items,
         priceSnapshot: params.pricing,
@@ -125,9 +137,9 @@ export class MockOrderAdapter implements IOrderAdapter {
         taxes: params.pricing.taxes,
         applicableCharges: params.pricing.packagingCharge + params.pricing.deliveryFee,
         grandTotal: params.pricing.grandTotal,
-        paymentStatus: 'completed',
-        paymentMethod: params.paymentMethod || 'UPI',
-        orderStatus: 'preparing',
+        paymentStatus,
+        paymentMethod: params.paymentMethod || 'Demo UPI (Simulated)',
+        orderStatus: 'placed',
         pickupOrDeliveryDetails: params.pickupOrDeliveryDetails || {},
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
@@ -162,13 +174,20 @@ export class MockOrderAdapter implements IOrderAdapter {
       throw new Error(`Order ${orderId} cannot be cancelled in status '${targetOrder.orderStatus}'.`);
     }
 
+    const cancellationReason = reason || 'Cancelled by customer';
+    const existingNotes = targetOrder.pickupOrDeliveryDetails?.notes;
+    const backwardCompatNotes = existingNotes
+      ? (existingNotes.includes(cancellationReason) ? existingNotes : `${existingNotes} | Cancelled: ${cancellationReason}`)
+      : `Cancelled: ${cancellationReason}`;
+
     const updatedOrder: Order = {
       ...targetOrder,
       orderStatus: 'cancelled',
+      cancellationReason,
       updatedAt: new Date().toISOString(),
       pickupOrDeliveryDetails: {
         ...targetOrder.pickupOrDeliveryDetails,
-        notes: reason ? `Cancelled: ${reason}` : targetOrder.pickupOrDeliveryDetails?.notes || 'Cancelled by customer',
+        notes: backwardCompatNotes,
       },
     };
 

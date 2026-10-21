@@ -21,9 +21,9 @@ Stage 1: Core Customer PWA & White-Label Foundation
 ├── Step 1.3: TypeScript Domain Models & Mock Data Adapters [COMPLETED]
 ├── Step 1.4: Home Page Functional Completion [COMPLETED]
 ├── Step 1.5: Floating Cart & Cart Page [COMPLETED]
-├── Step 1.6: Checkout & Mock Order Placement [NEXT MILESTONE]
-├── Step 1.7: Orders, Profile & Remaining Customer Pages
-├── Step 1.8: Animations, Transitions & Loading
+├── Step 1.6: Checkout & Mock Order Placement [COMPLETED]
+├── Step 1.7: Orders, Profile & Remaining Customer Pages [COMPLETED]
+├── Step 1.8: Animations, Transitions & Loading [NEXT MILESTONE]
 └── Step 1.9: PWA Finalization & Quality Assurance
 ```
 
@@ -123,25 +123,80 @@ Stage 1: Core Customer PWA & White-Label Foundation
 
 ---
 
-## 6. Subsequent Stage 1 Backlog Sequence
+## 6. Step 1.6 Implementation Status (COMPLETED)
 
-### Step 1.6 — Checkout & Mock Order Placement (`/checkout`, `/order-confirmation/:id`) [NEXT MILESTONE]
-- Service-mode dependent delivery details (Table Number for Dine-in; Counter Pickup estimate for Takeaway; Campus/Hostel Address picker for Delivery).
-- Mock payment method selection (UPI, Cash on Counter, Card).
-- Place order execution through `mockOrderAdapter` with concurrency guards.
-- Order confirmation slip with live token number and preparation progress tracker.
+### Status Summary
+- **Step 1.6 Status**: **COMPLETE** (October 2026)
+- **Checkout Page (`/checkout`)**: Mobile-first Checkout Page matching Campora Café design language. Includes order summary, service-mode fulfillment card (Dine-in Table #, Takeaway pickup desk, Delivery saved campus addresses), customer identity prefill, notes, mock payment selection, and sticky Place Order bar.
+- **Service Mode Fulfillment**:
+  - **Dine-in**: Table Number selection (1–40) with manual entry option.
+  - **Takeaway**: Pickup time estimate options ('10-15 mins', '20-25 mins', 'ASAP') and counter instructions.
+  - **Delivery**: Campus Hostel address picker with active default address and 'Add New Address' drawer.
+- **Customer Identity & Per-Item Cooking Notes**: Captures customer name (with operator-neutral fallbacks for guest users) and per-item cooking instructions (`specialInstructions`) intact into order history.
+- **Demo Payment State Accuracy**: Aligned with Stage 1 non-transactional mock semantics. Cash at Counter and Cash on Delivery persist as `'pending'` payment status; Demo UPI and Demo Card persist as `'simulated'`. Real refunds are explicitly prevented.
+- **Order Placement & Concurrency**: Atomic placement through `mockOrderAdapter.placeOrder` with in-flight duplicate placement guards. New orders receive initial status `'placed'`.
+- **Cart Cleanup & Preservation**: Cart is cleared upon successful order placement; preserved completely on simulated placement failure.
+- **Order Confirmation Page (`/order-confirmation/:id`)**: Displays live token number, order ID, estimated preparation/delivery time, fulfillment badge, ordered items breakdown, and direct navigation links to Order Details and Home.
+- **Automated Testing & QA**: 99 unit tests passing (13 test suites). Production build succeeds with 0 errors. Real browser mobile verification passed at 360px, 390px, and 430px.
 
-### Step 1.7 — Orders, Profile & Remaining Customer Pages
-- Dedicated `/orders` page with tabs (All Orders, Preparing, Completed, Cancelled).
-- Order details modal, repeat order action, and cancellation flow per adapter rules.
-- Profile page address book management (add new campus hostel/gate address).
-- Customer support sheet with operating hours and counter dialer links.
+### Completed Tasks Breakdown
 
-### Step 1.8 — Animations, Transitions & Loading
+| Task ID | Task Description | Target Files | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.6.1** | Checkout Page architecture & fulfillment details | `src/pages/CheckoutPage.tsx`, `src/App.tsx` | **Complete** | Table number selection, pickup desk estimate, delivery hostel address picker. |
+| **1.6.2** | Demo payment method selection & payment state rules | `src/pages/CheckoutPage.tsx`, `src/types/index.ts`, `src/adapters/mockOrderAdapter.ts` | **Complete** | Accurate demo semantics: `pending` for cash, `simulated` for UPI/Card. |
+| **1.6.3** | Order placement & concurrency protection | `src/adapters/mockOrderAdapter.ts`, `src/context/OrderContext.tsx` | **Complete** | Initial status `'placed'`; in-flight concurrency lock prevents duplicate orders. |
+| **1.6.4** | Order Confirmation Page & token slip | `src/pages/OrderConfirmationPage.tsx`, `src/App.tsx` | **Complete** | Token badge, live status tracker, preparation time, navigation to details. |
+| **1.6.5** | Automated testing & QA | `src/adapters/checkoutFunctional.test.ts` | **Complete** | 9 unit tests covering all 3 service modes, cash vs demo payment states, cart clearing, and operator isolation. |
+
+---
+
+## 7. Step 1.7 Implementation Status (COMPLETED)
+
+### Status Summary
+- **Step 1.7 Status**: **COMPLETE** (October 2026)
+- **Order History Page (`/orders`)**: Dual tabs: "All Orders" and "Cancelled", with live badge counters. Orders sorted chronologically in descending order (`sortOrdersByDateDesc`). Newly placed orders immediately prepend to top.
+- **Order Details Page (`/orders/:id`)**: Comprehensive breakdown with back navigation to Orders, fulfillment details, item breakdown with per-item cooking notes (`specialInstructions`), item quantities, pricing card, and payment method representation.
+- **Cancellation Data Integrity**:
+  - Only cancellable orders (`placed`, `preparing`) allow cancellation.
+  - Confirmation modal required before executing cancellation.
+  - Dedicated `cancellationReason?: string` field on `Order` prevents corruption or overwriting of existing customer fulfillment notes.
+  - Payment status remains unchanged (no fake refunds).
+  - Cancelled orders appear in Cancelled tab; counter updates dynamically.
+  - Persists across page refresh and operator switching.
+- **Safe Reorder**:
+  - Cross-references past items against active catalog pricing (`ci.item.price`).
+  - Detects unavailable items and alerts customer if items are retired or unavailable.
+  - Prompts customer before clearing or merging non-empty carts.
+- **Profile Page & Address Book Management (`/profile`)**:
+  - Full CRUD lifecycle for saved addresses: Add, Edit, Delete (with confirmation), and Set Default.
+  - Strict field validation (`validateAddressInput`) ensuring valid building, room/landmark, and 10+ digit recipient phone.
+  - Operator-isolated profiles: non-Campora canteens receive clean guest profiles with empty address books.
+  - Safe logout: clears operator-scoped auth profile without wiping unrelated cart, orders, or VEG preferences.
+  - Preserved approved lavender visual palette and coral Home return pill.
+- **Automated Testing & QA**: 108 unit tests passing across 14 test suites (0 failures). TypeScript typecheck (`tsc --noEmit`) clean, Vite production build clean.
+
+### Completed Tasks Breakdown
+
+| Task ID | Task Description | Target Files | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.7.1** | Order History list & tab counters | `src/pages/OrdersPage.tsx`, `src/utils/orderHistory.ts` | **Complete** | All Orders vs Cancelled tabs with live badge counters; descending date sorting. |
+| **1.7.2** | Order Details page & fulfillment breakdown | `src/pages/OrderDetailPage.tsx`, `src/App.tsx` | **Complete** | Fulfillment card, per-item cooking notes, pricing breakdown, dedicated cancellation reason display. |
+| **1.7.3** | Cancellation data integrity & dedicated field | `src/adapters/mockOrderAdapter.ts`, `src/types/index.ts`, `src/pages/OrderDetailPage.tsx` | **Complete** | Dedicated `cancellationReason` on `Order`; preserves customer notes intact; enforces non-terminal states. |
+| **1.7.4** | Safe Reorder workflow | `src/pages/OrderDetailPage.tsx` | **Complete** | Validates against current catalog pricing and availability; protects non-empty carts. |
+| **1.7.5** | Customer Profile & Address Book lifecycle | `src/pages/ProfilePage.tsx`, `src/adapters/mockProfileAdapter.ts`, `src/context/AuthContext.tsx` | **Complete** | Address Add/Edit/Delete/Default CRUD, validation, operator isolation, safe logout. |
+| **1.7.6** | Automated testing & regression suite | `src/adapters/ordersAndProfileFunctional.test.ts` | **Complete** | 9 unit test scenarios covering tabs, descending sorting, cancellation integrity, address CRUD, and operator isolation. |
+
+---
+
+## 8. Subsequent Stage 1 Backlog Sequence
+
+### Step 1.8 — Animations, Transitions & Loading [NEXT MILESTONE]
 - High-fidelity micro-interactions and transitions across all customer routes.
-- Full-screen VEG mode transition animation with sound/haptics toggle support.
+- Full-screen VEG mode radial transition animation with sound/haptics toggle support.
 - Floating cart item fly-in and beverage 3D bottle animations.
 - Page readiness skeletons for Home, Cart, Orders, and Profile.
+- Reduced-motion accessibility (`prefers-reduced-motion`) and mobile frame stability (60fps).
 
 ### Step 1.9 — PWA Finalization & Quality Assurance
 - Service worker precaching and offline fallback screen.

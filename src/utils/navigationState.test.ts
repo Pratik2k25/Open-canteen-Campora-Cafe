@@ -37,6 +37,14 @@ test('computeNavState identifies home, order, and profile routes correctly', () 
   assert.equal(cart.isCartActive, true);
   // BottomNav MUST be hidden on Cart (to allow Cart sticky checkout action bar)
   assert.equal(cart.showBottomNav, false);
+
+  const checkout = computeNavState('/checkout');
+  assert.equal(checkout.currentTab, 'other');
+  assert.equal(checkout.showBottomNav, false);
+
+  const confirmation = computeNavState('/order-confirmation/C1048');
+  assert.equal(confirmation.currentTab, 'other');
+  assert.equal(confirmation.showBottomNav, false);
 });
 
 test('computeSpatialTransition computes forward and backward slide coordinates', () => {

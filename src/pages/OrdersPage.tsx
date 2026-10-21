@@ -211,26 +211,40 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ hideBottomNav = false })
               />
 
               <h2 className="text-[21px] font-extrabold text-[#111827] mt-3 tracking-tight">
-                No Orders Yet!
+                {activeTab === 'cancelled' && effectiveOrders.length > 0
+                  ? 'No Cancelled Orders'
+                  : 'No Orders Yet!'}
               </h2>
 
               <p className="text-[13px] font-medium text-[#64748B] mt-2 max-w-[265px] mx-auto leading-[1.48]">
-                You haven’t placed any orders yet. Browse our delicious menu and place your first
-                order now.
+                {activeTab === 'cancelled' && effectiveOrders.length > 0
+                  ? 'You do not have any cancelled orders. All your orders are currently active or completed.'
+                  : 'You haven’t placed any orders yet. Browse our delicious menu and place your first order now.'}
               </p>
 
-              {/* Green Explore Menu Pill CTA */}
-              <button
-                onClick={() => navigate('/')}
-                className="mt-5 bg-[#08914D] hover:bg-[#067A40] active:scale-[0.98] text-white font-bold text-[14.5px] px-8 py-3 rounded-full shadow-[0_4px_14px_rgba(8,145,77,0.25)] inline-flex items-center justify-center gap-2.5 transition-all cursor-pointer min-w-[195px]"
-              >
-                {/* Fork & Spoon White Icon */}
-                <svg viewBox="0 0 20 20" className="w-[18px] h-[18px] shrink-0" fill="#FFFFFF">
-                  <path d="M4.5 2.5c-.4 0-.7.3-.7.7v4.3c0 1.1.7 2 1.7 2.3v7.2c0 .6.4 1 1 1s1-.4 1-1V9.8c1-.3 1.7-1.2 1.7-2.3V3.2c0-.4-.3-.7-.7-.7s-.7.3-.7.7v3.3h-.6V3.2c0-.4-.3-.7-.7-.7s-.7.3-.7.7v3.3h-.6V3.2c0-.4-.3-.7-.7-.7z" />
-                  <path d="M13.8 2.5c-1.5 0-2.7 1.5-2.7 3.4 0 1.5.8 2.8 1.8 3.2v7.9c0 .6.4 1 1 1s1-.4 1-1V9.1c1-.4 1.8-1.7 1.8-3.2 0-1.9-1.2-3.4-2.9-3.4z" />
-                </svg>
-                <span>Explore Menu</span>
-              </button>
+              {/* Action CTA Pill */}
+              {activeTab === 'cancelled' && effectiveOrders.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('all')}
+                  className="mt-5 bg-[#08914D] hover:bg-[#067A40] active:scale-[0.98] text-white font-bold text-[14.5px] px-8 py-3 rounded-full shadow-[0_4px_14px_rgba(8,145,77,0.25)] inline-flex items-center justify-center gap-2.5 transition-all cursor-pointer min-w-[195px]"
+                >
+                  <span>View All Orders</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className="mt-5 bg-[#08914D] hover:bg-[#067A40] active:scale-[0.98] text-white font-bold text-[14.5px] px-8 py-3 rounded-full shadow-[0_4px_14px_rgba(8,145,77,0.25)] inline-flex items-center justify-center gap-2.5 transition-all cursor-pointer min-w-[195px]"
+                >
+                  {/* Fork & Spoon White Icon */}
+                  <svg viewBox="0 0 20 20" className="w-[18px] h-[18px] shrink-0" fill="#FFFFFF">
+                    <path d="M4.5 2.5c-.4 0-.7.3-.7.7v4.3c0 1.1.7 2 1.7 2.3v7.2c0 .6.4 1 1 1s1-.4 1-1V9.8c1-.3 1.7-1.2 1.7-2.3V3.2c0-.4-.3-.7-.7-.7s-.7.3-.7.7v3.3h-.6V3.2c0-.4-.3-.7-.7-.7s-.7.3-.7.7v3.3h-.6V3.2c0-.4-.3-.7-.7-.7z" />
+                    <path d="M13.8 2.5c-1.5 0-2.7 1.5-2.7 3.4 0 1.5.8 2.8 1.8 3.2v7.9c0 .6.4 1 1 1s1-.4 1-1V9.1c1-.4 1.8-1.7 1.8-3.2 0-1.9-1.2-3.4-2.9-3.4z" />
+                  </svg>
+                  <span>Explore Menu</span>
+                </button>
+              )}
             </div>
           )}
         </main>

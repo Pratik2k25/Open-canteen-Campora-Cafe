@@ -15,6 +15,7 @@ export interface PlaceOrderParams {
   items: CartItem[];
   pricing: PriceBreakdown;
   paymentMethod: string;
+  customerName?: string;
   pickupOrDeliveryDetails: {
     tableNumber?: string;
     pickupTimeEstimate?: string;
@@ -68,6 +69,11 @@ export interface IProfileAdapter {
   addSavedAddress(
     operatorId: string,
     address: Omit<SavedAddress, 'id'>
+  ): Promise<CustomerProfileData>;
+  updateSavedAddress(
+    operatorId: string,
+    addressId: string,
+    updates: Partial<Omit<SavedAddress, 'id'>>
   ): Promise<CustomerProfileData>;
   deleteSavedAddress(operatorId: string, addressId: string): Promise<CustomerProfileData>;
   setDefaultAddress(operatorId: string, addressId: string): Promise<CustomerProfileData>;

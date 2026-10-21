@@ -98,6 +98,30 @@ export function validateProfileUpdate(input: {
   return { valid: true };
 }
 
+export function validateAddressInput(input: {
+  buildingOrGate: string;
+  roomOrLandmark: string;
+  recipientPhone?: string;
+}): ProfileValidationResult {
+  const building = (input.buildingOrGate || '').trim();
+  const room = (input.roomOrLandmark || '').trim();
+  const phone = (input.recipientPhone || '').trim();
+
+  if (!building) {
+    return { valid: false, error: 'Building, hostel, or campus gate is required.' };
+  }
+  if (!room) {
+    return { valid: false, error: 'Room number, lab, or landmark is required.' };
+  }
+  if (phone) {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 10) {
+      return { valid: false, error: 'Recipient phone must be at least 10 digits.' };
+    }
+  }
+  return { valid: true };
+}
+
 export function toggleVegModeState(profile: CustomerProfileData): CustomerProfileData {
   return {
     ...profile,

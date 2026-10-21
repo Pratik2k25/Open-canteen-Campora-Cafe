@@ -71,7 +71,9 @@ describe('Order History Pure Logic', () => {
     assert.equal(cancelledOnly[0].orderId, 'C1039');
   });
 
-  it('returns correct status badge configs for Preparing, Delivered, Completed, and Cancelled', () => {
+  it('returns correct status badge configs for Placed, Preparing, Delivered, Completed, and Cancelled', () => {
+    assert.equal(getOrderStatusBadgeConfig('placed').label, 'Placed');
+    assert.equal(getOrderStatusBadgeConfig('placed').iconType, 'clock');
     assert.equal(getOrderStatusBadgeConfig('preparing').label, 'Preparing');
     assert.equal(getOrderStatusBadgeConfig('preparing').iconType, 'clock');
     assert.equal(getOrderStatusBadgeConfig('delivered').label, 'Delivered');

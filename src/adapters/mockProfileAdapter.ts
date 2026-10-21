@@ -113,6 +113,34 @@ export class MockProfileAdapter implements IProfileAdapter {
     return updated;
   }
 
+  public async updateSavedAddress(
+    operatorId: string,
+    addressId: string,
+    updates: Partial<Omit<SavedAddress, 'id'>>
+  ): Promise<CustomerProfileData> {
+    const current = await this.getProfile(operatorId);
+    let updatedAddresses = current.savedAddresses.map((a) => {
+      if (a.id === addressId) {
+        return { ...a, ...updates };
+      }
+      return a;
+    });
+
+    if (updates.isDefault) {
+      updatedAddresses = updatedAddresses.map((a) => ({
+        ...a,
+        isDefault: a.id === addressId,
+      }));
+    }
+
+    const updated: CustomerProfileData = {
+      ...current,
+      savedAddresses: updatedAddresses,
+    };
+    this.writeStorageProfile(operatorId, updated);
+    return updated;
+  }
+
   public async deleteSavedAddress(
     operatorId: string,
     addressId: string

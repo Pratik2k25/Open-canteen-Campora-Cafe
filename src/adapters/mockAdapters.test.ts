@@ -161,7 +161,7 @@ test('8 & 10. Order creation, pricing consistency, and duplicate prevention', as
 
   assert.ok(created.orderId.startsWith('C'));
   assert.equal(created.grandTotal, 189);
-  assert.equal(created.orderStatus, 'preparing');
+  assert.equal(created.orderStatus, 'placed');
   assert.equal(created.userDisplayName, 'Test User');
 
   const afterOrders = await adapter.getOrders('campora-cafe');
@@ -180,6 +180,7 @@ test('9 & 15. Order cancellation eligibility and failure handling', async () => 
 
   const cancelled = await adapter.cancelOrder('campora-cafe', 'C1047', 'Customer changed mind');
   assert.equal(cancelled.orderStatus, 'cancelled');
+  assert.equal(cancelled.cancellationReason, 'Customer changed mind');
   assert.ok(cancelled.pickupOrDeliveryDetails.notes?.includes('Customer changed mind'));
 
   // C1046 is 'delivered' -> should NOT be cancellable

@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Plus, Edit2, Trash2, Check, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useCanteen } from '../context/CanteenContext.tsx';
+import { useAuth } from '../context/AuthContext.tsx';
+import type { SavedAddress } from '../types/index.ts';
 import {
   getAvatarInitial,
   validateProfileUpdate,
+  validateAddressInput,
   type CustomerProfileData,
   type AppearanceTheme,
 } from '../utils/profileData.ts';
@@ -47,6 +51,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   hideFloatingHomePill = false,
 }) => {
   const { config } = useCanteen();
+  const { logout } = useAuth();
   const operatorId = config.identity.id;
   const activeOperatorRef = useRef(operatorId);
   const navigate = useNavigate();
@@ -67,6 +72,94 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [editPhone, setEditPhone] = useState(profile.phoneNumber);
   const [editError, setEditError] = useState<string | null>(null);
   const [statusToast, setStatusToast] = useState<string | null>(null);
+
+  // Address Book CRUD state
+  const [addressSubView, setAddressSubView] = useState<'list' | 'add' | 'edit'>('list');
+  const [addrLabel, setAddrLabel] = useState<'Hostel' | 'Department' | 'Campus Gate' | 'Other'>('Hostel');
+  const [addrBuilding, setAddrBuilding] = useState<string>('');
+  const [addrRoom, setAddrRoom] = useState<string>('');
+  const [addrPhone, setAddrPhone] = useState<string>('');
+  const [addrIsDefault, setAddrIsDefault] = useState<boolean>(false);
+  const [addrError, setAddrError] = useState<string | null>(null);
+  const [editingAddrId, setEditingAddrId] = useState<string | null>(null);
+  const [deleteConfirmAddrId, setDeleteConfirmAddrId] = useState<string | null>(null);
+
+  const resetAddressForm = () => {
+    setAddrLabel('Hostel');
+    setAddrBuilding('');
+    setAddrRoom('');
+    setAddrPhone(profile.phoneNumber || '');
+    setAddrIsDefault(profile.savedAddresses.length === 0);
+    setAddrError(null);
+    setEditingAddrId(null);
+  };
+
+  const handleOpenAddAddress = () => {
+    resetAddressForm();
+    setAddressSubView('add');
+  };
+
+  const handleOpenEditAddress = (addr: SavedAddress) => {
+    setAddrLabel(addr.label);
+    setAddrBuilding(addr.buildingOrGate);
+    setAddrRoom(addr.roomOrLandmark);
+    setAddrPhone(addr.recipientPhone || '');
+    setAddrIsDefault(addr.isDefault);
+    setAddrError(null);
+    setEditingAddrId(addr.id);
+    setAddressSubView('edit');
+  };
+
+  const handleSaveAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const validation = validateAddressInput({
+      buildingOrGate: addrBuilding,
+      roomOrLandmark: addrRoom,
+      recipientPhone: addrPhone,
+    });
+    if (!validation.valid) {
+      setAddrError(validation.error || 'Please fill in all required fields.');
+      return;
+    }
+
+    if (addressSubView === 'add') {
+      const updated = await mockProfileAdapter.addSavedAddress(operatorId, {
+        userId: profile.uid,
+        label: addrLabel,
+        buildingOrGate: addrBuilding.trim(),
+        roomOrLandmark: addrRoom.trim(),
+        recipientPhone: addrPhone.trim(),
+        isDefault: addrIsDefault || profile.savedAddresses.length === 0,
+      });
+      if (activeOperatorRef.current === operatorId) {
+        setProfile(updated);
+        setAddressSubView('list');
+        showToast('Address added to your address book');
+      }
+    } else if (addressSubView === 'edit' && editingAddrId) {
+      const updated = await mockProfileAdapter.updateSavedAddress(operatorId, editingAddrId, {
+        label: addrLabel,
+        buildingOrGate: addrBuilding.trim(),
+        roomOrLandmark: addrRoom.trim(),
+        recipientPhone: addrPhone.trim(),
+        isDefault: addrIsDefault,
+      });
+      if (activeOperatorRef.current === operatorId) {
+        setProfile(updated);
+        setAddressSubView('list');
+        showToast('Address updated');
+      }
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    const updated = await mockProfileAdapter.deleteSavedAddress(operatorId, addressId);
+    if (activeOperatorRef.current === operatorId) {
+      setProfile(updated);
+      setDeleteConfirmAddrId(null);
+      showToast('Address removed');
+    }
+  };
 
   // Reload profile state cleanly from mockProfileAdapter when canteen operator changes at runtime
   useEffect(() => {
@@ -164,8 +257,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     }
   };
 
-  const handleConfirmLogout = () => {
+  const handleConfirmLogout = async () => {
     setActiveSheet(null);
+    try {
+      await logout();
+    } catch {
+      // Mock development session
+    }
     showToast('Signed out of demo session');
     window.setTimeout(() => {
       navigate('/');
@@ -557,7 +655,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             {/* Row 1: Address Book */}
             <button
               type="button"
-              onClick={() => setActiveSheet('addressBook')}
+              onClick={() => {
+                setAddressSubView('list');
+                setDeleteConfirmAddrId(null);
+                setActiveSheet('addressBook');
+              }}
               className="w-full py-2 flex items-center justify-between text-left hover:bg-neutral-50/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -801,10 +903,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             <div
               role="dialog"
               aria-modal="true"
-              className="w-full max-w-[430px] bg-white rounded-t-[24px] p-5 shadow-2xl"
+              className="w-full max-w-[430px] bg-white rounded-t-[24px] p-5 shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-10 h-1.5 bg-neutral-200 rounded-full mx-auto mb-4" />
+              <div className="w-10 h-1.5 bg-neutral-200 rounded-full mx-auto mb-3" />
+              <button
+                type="button"
+                onClick={() => setActiveSheet(null)}
+                aria-label="Close sheet"
+                className="absolute right-4 top-4 p-1.5 rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
+              >
+                <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
+                  <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
 
               {activeSheet === 'editProfile' && (
                 <form onSubmit={handleSaveProfile} className="flex flex-col gap-3">
@@ -999,42 +1111,276 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
               {activeSheet === 'addressBook' && (
                 <div className="flex flex-col gap-3">
-                  <h3 className="text-[16px] font-bold text-[#111827]">Saved Campus Addresses</h3>
-                  {profile.savedAddresses.length === 0 ? (
-                    <div className="py-4 text-center">
-                      <p className="text-[13px] font-medium text-[#64748B]">No saved addresses yet</p>
-                      <p className="text-[11px] text-[#94A3B8] mt-0.5">Addresses added during checkout will appear here.</p>
+                  {deleteConfirmAddrId ? (
+                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex flex-col gap-3">
+                      <div className="flex items-center gap-2 text-rose-700 font-bold text-[14px]">
+                        <AlertCircle className="w-5 h-5" />
+                        <span>Delete Address?</span>
+                      </div>
+                      <p className="text-[12.5px] text-neutral-600">
+                        Are you sure you want to remove this delivery address from your profile?
+                      </p>
+                      <div className="flex gap-2 mt-1">
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirmAddrId(null)}
+                          className="flex-1 py-2 rounded-xl bg-white border border-neutral-200 text-neutral-700 text-[12.5px] font-bold cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAddress(deleteConfirmAddrId)}
+                          className="flex-1 py-2 rounded-xl bg-rose-600 text-white text-[12.5px] font-bold cursor-pointer shadow-xs"
+                        >
+                          Yes, Delete
+                        </button>
+                      </div>
                     </div>
-                  ) : (
-                    profile.savedAddresses.map((addr) => (
-                      <div
-                        key={addr.id}
-                        onClick={() => handleSetDefaultAddress(addr.id)}
-                        className={`p-3 rounded-xl border cursor-pointer transition-colors ${
-                          addr.isDefault
-                            ? 'border-[#19B559] bg-[#EBFAF0]/40'
-                            : 'border-neutral-200 bg-white'
-                        }`}
+                  ) : addressSubView === 'list' ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-[16px] font-bold text-[#111827]">
+                            Saved Campus Addresses
+                          </h3>
+                          <p className="text-[11.5px] text-[#64748B]">
+                            Manage delivery locations for campus orders
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleOpenAddAddress}
+                          className="bg-[#EBFAF0] hover:bg-[#D7F5E2] text-[#16A34A] text-[12px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add New</span>
+                        </button>
+                      </div>
+
+                      {profile.savedAddresses.length === 0 ? (
+                        <div className="py-6 px-4 text-center bg-neutral-50 rounded-2xl border border-dashed border-neutral-200">
+                          <p className="text-[13px] font-bold text-[#111827]">
+                            No saved addresses yet
+                          </p>
+                          <p className="text-[11.5px] text-[#64748B] mt-1 max-w-[240px] mx-auto">
+                            Add your hostel room or department building to enable fast one-tap delivery.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleOpenAddAddress}
+                            className="mt-3.5 px-4 py-2 bg-[#19B559] text-white text-[12px] font-bold rounded-full shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add First Address</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2 max-h-[340px] overflow-y-auto no-scrollbar pr-0.5">
+                          {profile.savedAddresses.map((addr) => (
+                            <div
+                              key={addr.id}
+                              className={`p-3 rounded-xl border transition-all ${
+                                addr.isDefault
+                                  ? 'border-[#19B559] bg-[#EBFAF0]/40 shadow-xs'
+                                  : 'border-neutral-200 bg-white'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700">
+                                    {addr.label}
+                                  </span>
+                                  {addr.isDefault && (
+                                    <span className="text-[10.5px] font-bold text-[#16A34A] bg-[#EBFAF0] px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                                      <Check className="w-3 h-3" />
+                                      Default
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  {!addr.isDefault && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSetDefaultAddress(addr.id)}
+                                      className="text-[11px] font-semibold text-[#16A34A] hover:underline cursor-pointer"
+                                    >
+                                      Set Default
+                                    </button>
+                                  )}
+                                  <button
+                                      type="button"
+                                      onClick={() => handleOpenEditAddress(addr)}
+                                      aria-label={`Edit ${addr.label} address`}
+                                      className="p-1 rounded-md text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100 cursor-pointer"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeleteConfirmAddrId(addr.id)}
+                                      aria-label={`Delete ${addr.label} address`}
+                                      className="p-1 rounded-md text-neutral-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                              </div>
+
+                              <div className="mt-2 text-[12.5px] font-bold text-[#111827]">
+                                {addr.buildingOrGate}
+                              </div>
+                              <p className="text-[11.5px] text-[#64748B] mt-0.5">
+                                {addr.roomOrLandmark}
+                              </p>
+                              {addr.recipientPhone && (
+                                <p className="text-[11px] text-[#94A3B8] mt-0.5">
+                                  Phone: {addr.recipientPhone}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveSheet(null)}
+                        className="w-full mt-1 py-2.5 rounded-xl bg-[#111827] text-white text-[13px] font-bold cursor-pointer"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[13px] font-bold text-[#111827]">
-                            {addr.label} · {addr.buildingOrGate}
-                          </span>
-                          {addr.isDefault && (
-                            <span className="text-[11px] font-bold text-[#16A34A]">Default</span>
+                        Close
+                      </button>
+                    </>
+                  ) : (
+                    /* ADD OR EDIT ADDRESS FORM */
+                    <form onSubmit={handleSaveAddress} className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAddressSubView('list')}
+                          className="p-1 rounded-full text-neutral-600 hover:bg-neutral-100 cursor-pointer"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                        </button>
+                        <h3 className="text-[16px] font-bold text-[#111827]">
+                          {addressSubView === 'add' ? 'Add Campus Address' : 'Edit Address'}
+                        </h3>
+                      </div>
+
+                      {/* Label Selector */}
+                      <div>
+                        <label className="block text-[11.5px] font-semibold text-[#475569] mb-1.5">
+                          Address Type
+                        </label>
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {(['Hostel', 'Department', 'Campus Gate', 'Other'] as const).map(
+                            (lbl) => (
+                              <button
+                                key={lbl}
+                                type="button"
+                                onClick={() => setAddrLabel(lbl)}
+                                className={`py-1.5 px-1 rounded-lg text-[11.5px] font-bold border transition-colors cursor-pointer text-center truncate ${
+                                  addrLabel === lbl
+                                    ? 'bg-[#19B559] text-white border-[#19B559]'
+                                    : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50'
+                                }`}
+                              >
+                                {lbl}
+                              </button>
+                            )
                           )}
                         </div>
-                        <p className="text-[11.5px] text-[#64748B] mt-0.5">{addr.roomOrLandmark}</p>
                       </div>
-                    ))
+
+                      {/* Building / Hostel */}
+                      <div>
+                        <label
+                          htmlFor="addr-building-input"
+                          className="block text-[11.5px] font-semibold text-[#475569] mb-1"
+                        >
+                          Hostel, Department, or Gate *
+                        </label>
+                        <input
+                          id="addr-building-input"
+                          type="text"
+                          value={addrBuilding}
+                          onChange={(e) => setAddrBuilding(e.target.value)}
+                          placeholder="e.g. Aryabhatta Hostel, Block B"
+                          className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-[13px] text-[#111827] focus:outline-none focus:border-[#19B559]"
+                        />
+                      </div>
+
+                      {/* Room / Landmark */}
+                      <div>
+                        <label
+                          htmlFor="addr-room-input"
+                          className="block text-[11.5px] font-semibold text-[#475569] mb-1"
+                        >
+                          Room Number, Lab, or Landmark *
+                        </label>
+                        <input
+                          id="addr-room-input"
+                          type="text"
+                          value={addrRoom}
+                          onChange={(e) => setAddrRoom(e.target.value)}
+                          placeholder="e.g. Room 304, Near Main Mess"
+                          className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-[13px] text-[#111827] focus:outline-none focus:border-[#19B559]"
+                        />
+                      </div>
+
+                      {/* Recipient Phone */}
+                      <div>
+                        <label
+                          htmlFor="addr-phone-input"
+                          className="block text-[11.5px] font-semibold text-[#475569] mb-1"
+                        >
+                          Recipient Contact Number (Optional)
+                        </label>
+                        <input
+                          id="addr-phone-input"
+                          type="tel"
+                          value={addrPhone}
+                          onChange={(e) => setAddrPhone(e.target.value)}
+                          placeholder="+91 98765 43210"
+                          className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-[13px] text-[#111827] focus:outline-none focus:border-[#19B559]"
+                        />
+                      </div>
+
+                      {/* Default Address Checkbox */}
+                      <label className="flex items-center gap-2 cursor-pointer mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={addrIsDefault}
+                          onChange={(e) => setAddrIsDefault(e.target.checked)}
+                          className="w-4 h-4 rounded text-[#19B559] focus:ring-[#19B559] border-neutral-300"
+                        />
+                        <span className="text-[12px] font-medium text-neutral-700">
+                          Set as default delivery address
+                        </span>
+                      </label>
+
+                      {addrError && (
+                        <p className="text-[12px] font-medium text-[#EF4444]">{addrError}</p>
+                      )}
+
+                      <div className="flex items-center gap-2.5 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setAddressSubView('list')}
+                          className="flex-1 py-2.5 rounded-xl bg-neutral-100 text-[#475569] text-[13px] font-bold cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex-1 py-2.5 rounded-xl bg-[#19B559] text-white text-[13px] font-bold cursor-pointer shadow-xs"
+                        >
+                          {addressSubView === 'add' ? 'Save Address' : 'Update Address'}
+                        </button>
+                      </div>
+                    </form>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setActiveSheet(null)}
-                    className="w-full mt-1 py-2.5 rounded-xl bg-[#111827] text-white text-[13px] font-bold cursor-pointer"
-                  >
-                    Close
-                  </button>
                 </div>
               )}
 

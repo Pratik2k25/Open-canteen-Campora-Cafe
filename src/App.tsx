@@ -10,6 +10,8 @@ import { OrdersPage } from './pages/OrdersPage.tsx';
 import { OrderDetailPage } from './pages/OrderDetailPage.tsx';
 import { ProfilePage } from './pages/ProfilePage.tsx';
 import { CartPage } from './pages/CartPage.tsx';
+import { CheckoutPage } from './pages/CheckoutPage.tsx';
+import { OrderConfirmationPage } from './pages/OrderConfirmationPage.tsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.tsx';
 
 export default function App() {
@@ -28,7 +30,7 @@ export default function App() {
 
                 {/* Phase 2: Order History Page (With Orders & Empty State) + Order Details */}
                 <Route path="/orders" element={<OrdersPage hideBottomNav />} />
-                <Route path="/orders/:id" element={<OrderDetailPage />} />
+                <Route path="/orders/:id" element={<OrderDetailPage hideBottomNav />} />
 
                 {/* Phase 3: Approved Profile Page (Rendered within spatial transition stage) */}
                 <Route path="/profile" element={<ProfilePage hideFloatingHomePill />} />
@@ -44,11 +46,11 @@ export default function App() {
               />
               <Route
                 path="/checkout"
-                element={<PlaceholderPage title="Checkout" description="Step 1.6 will implement mock checkout, address selection, and payment options." />}
+                element={<CheckoutPage />}
               />
               <Route
                 path="/order-confirmation/:id"
-                element={<PlaceholderPage title="Order Confirmation" description="Token slip and estimated preparation time." />}
+                element={<OrderConfirmationPage />}
               />
               <Route
                 path="/login"

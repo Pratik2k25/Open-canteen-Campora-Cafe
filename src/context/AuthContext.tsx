@@ -54,15 +54,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const activeOperatorRef = useRef(operatorId);
 
-  const [user, setUser] = useState<UserProfile | null>(() => {
-    const defaultGuest: UserProfile = {
-      uid: 'customer-demo-1',
-      displayName: 'Pratik Kumar',
-      email: 'devlopwithpratik@gmail.com',
-      phoneNumber: '+91 98765 43210',
+  const getDefaultGuest = (opId: string): UserProfile => {
+    if (opId === 'campora-cafe') {
+      return {
+        uid: 'customer-demo-1',
+        displayName: 'Pratik Kumar',
+        email: 'devlopwithpratik@gmail.com',
+        phoneNumber: '+91 98765 43210',
+        createdAt: '2025-06-01T00:00:00.000Z',
+        preferences: defaultPreferences,
+      };
+    }
+    return {
+      uid: `customer-${opId}`,
+      displayName: 'Guest Customer',
+      email: '',
+      phoneNumber: '',
       createdAt: new Date().toISOString(),
       preferences: defaultPreferences,
     };
+  };
+
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    const defaultGuest = getDefaultGuest(operatorId);
     return readScopedOrLegacy<UserProfile | null>(
       STORAGE_KEYS.USER,
       LEGACY_STORAGE_KEYS.USER,
@@ -83,14 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Reload user state cleanly when canteen operator changes at runtime
   useEffect(() => {
-    const defaultGuest: UserProfile = {
-      uid: 'customer-demo-1',
-      displayName: 'Pratik Kumar',
-      email: 'devlopwithpratik@gmail.com',
-      phoneNumber: '+91 98765 43210',
-      createdAt: new Date().toISOString(),
-      preferences: defaultPreferences,
-    };
+    const defaultGuest = getDefaultGuest(operatorId);
     const loaded = readScopedOrLegacy<UserProfile | null>(
       STORAGE_KEYS.USER,
       LEGACY_STORAGE_KEYS.USER,
@@ -260,10 +267,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch {
+      // In mock development session
+    }
     setUser(null);
     const storage = safeGetStorage();
     if (storage) {
+      const scopedKey = getOperatorStorageKey(STORAGE_KEYS.USER, operatorId);
+      storage.removeItem?.(scopedKey);
       storage.removeItem?.(STORAGE_KEYS.USER);
       storage.removeItem?.(LEGACY_STORAGE_KEYS.USER);
     }

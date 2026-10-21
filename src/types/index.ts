@@ -73,7 +73,7 @@ export type OrderStatus =
   | 'completed'
   | 'cancelled';
 
-export type PaymentStatus = 'pending' | 'completed' | 'failed';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'simulated';
 
 export interface Order {
   orderId: string;
@@ -89,6 +89,8 @@ export interface Order {
   paymentStatus: PaymentStatus;
   paymentMethod: string;
   orderStatus: OrderStatus;
+  /** Dedicated reason for order cancellation, preserving customer fulfillment notes uncorrupted */
+  cancellationReason?: string;
   pickupOrDeliveryDetails: {
     tableNumber?: string;
     pickupTimeEstimate?: string;
