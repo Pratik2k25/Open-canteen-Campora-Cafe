@@ -133,6 +133,23 @@ export interface UserProfile {
   preferences: UserPreferences;
 }
 
+export interface CanteenCatalog {
+  canteenId: string;
+  canteenName: string;
+  categories: Category[];
+  items: MenuItem[];
+  updatedAt: string;
+  isDemoCatalog?: boolean;
+}
+
+// Re-export Customer Profile & Preference types from profileData
+export type {
+  CustomerProfileData,
+  AppearanceTheme,
+  NotificationSettings,
+  ProfileValidationResult,
+} from '../utils/profileData.ts';
+
 // Re-export Canteen Configuration types (Stage 1 · Step 1.2 · Task 1.2.1)
 export type {
   CanteenConfig,
@@ -150,3 +167,4 @@ export type {
   CanteenPWA,
   CanteenPWAInput,
 } from '../config/canteenConfig.ts';
+

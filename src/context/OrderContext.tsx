@@ -1,494 +1,28 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { Order, ServiceMode, CartItem, PriceBreakdown } from '../types/index.ts';
 import { useAuth } from './AuthContext.tsx';
-import { db, handleFirestoreError, OperationType } from '../config/firebase.ts';
-import {
-  doc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-  collection,
-  query,
-  where,
-  onSnapshot,
-} from 'firebase/firestore';
-import { MENU_ITEMS } from '../data/menuData.ts';
 import { useCanteen } from './CanteenContext.tsx';
-import {
-  STORAGE_KEYS,
-  LEGACY_STORAGE_KEYS,
-  storageValidators,
-  readScopedOrLegacy,
-  getOperatorStorageKey,
-  safeGetStorage,
-} from '../utils/storageKeys.ts';
+import { CAMPORA_SEED_ORDERS } from '../data/mock/index.ts';
+import { mockOrderAdapter } from '../adapters/mockOrderAdapter.ts';
+import type { PlaceOrderParams } from '../adapters/types.ts';
 
-interface PlaceOrderParams {
-  serviceMode: ServiceMode;
-  items: CartItem[];
-  pricing: PriceBreakdown;
-  paymentMethod: string;
-  pickupOrDeliveryDetails: {
-    tableNumber?: string;
-    pickupTimeEstimate?: string;
-    deliveryAddress?: string;
-    contactNumber?: string;
-    notes?: string;
-  };
-}
+// Backward-compatible re-export of SEED_ORDERS for tests and consumers
+export const SEED_ORDERS: Order[] = CAMPORA_SEED_ORDERS;
+
+export type { PlaceOrderParams };
 
 interface OrderContextType {
   orders: Order[];
   activeOrder: Order | null;
   loadingOrders: boolean;
   placeOrder: (params: PlaceOrderParams) => Promise<Order>;
-  cancelOrder: (orderId: string) => Promise<void>;
+  cancelOrder: (orderId: string, reason?: string) => Promise<void>;
   getOrderById: (orderId: string) => Order | undefined;
   clearOrdersState: () => void;
   restoreSeedOrdersState: () => void;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
-
-const findMenuItem = (id: string) => MENU_ITEMS.find((m) => m.id === id) || MENU_ITEMS[0];
-
-export const SEED_ORDERS: Order[] = [
-  // 1. Order #C1047 — Preparing — Dinein — ₹292
-  {
-    orderId: 'C1047',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'dinein',
-    items: [
-      { item: findMenuItem('jalebi'), quantity: 1 },
-      {
-        item: {
-          ...findMenuItem('dark-chocolate-cake'),
-          id: 'rosogulla',
-          name: 'Rosogulla',
-          price: 242,
-        },
-        quantity: 1,
-      },
-    ],
-    priceSnapshot: {
-      subtotal: 278,
-      taxes: 14,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 292,
-      totalItemCount: 2,
-    },
-    subtotal: 278,
-    taxes: 14,
-    applicableCharges: 0,
-    grandTotal: 292,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'preparing',
-    pickupOrDeliveryDetails: {
-      tableNumber: 'Table T-04',
-      notes: 'Serve hot with saffron syrup',
-    },
-    createdAt: '2025-06-16T11:32:00.000Z',
-    updatedAt: '2025-06-16T11:32:00.000Z',
-    displayDate: '16 Jun 2025',
-    displayTime: '11:32 AM',
-    thumbnailUrl: '/assets/orders/thumb-jalebi.png',
-    itemsSummary: 'Jalebi (x1), Rosogulla (x1)',
-  },
-  // 2. Order #C1046 — Delivered — Takeaway — ₹154
-  {
-    orderId: 'C1046',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'takeaway',
-    items: [
-      { item: findMenuItem('chicken-burger'), quantity: 1 },
-      {
-        item: {
-          ...findMenuItem('dark-chocolate-cake'),
-          id: 'cold-coffee',
-          name: 'Cold Coffee',
-          price: 60,
-        },
-        quantity: 1,
-      },
-    ],
-    priceSnapshot: {
-      subtotal: 139,
-      taxes: 5,
-      packagingCharge: 10,
-      deliveryFee: 0,
-      grandTotal: 154,
-      totalItemCount: 2,
-    },
-    subtotal: 139,
-    taxes: 5,
-    applicableCharges: 10,
-    grandTotal: 154,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'delivered',
-    pickupOrDeliveryDetails: {
-      pickupTimeEstimate: '15 mins',
-    },
-    createdAt: '2025-06-15T13:18:00.000Z',
-    updatedAt: '2025-06-15T13:35:00.000Z',
-    displayDate: '15 Jun 2025',
-    displayTime: '01:18 PM',
-    thumbnailUrl: '/assets/orders/thumb-burger.png',
-    itemsSummary: 'Chicken Burger (x1), Cold Coffee (x1)',
-  },
-  // 3. Order #C1045 — Completed — Dinein — ₹136
-  {
-    orderId: 'C1045',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'dinein',
-    items: [
-      { item: findMenuItem('paneer-paratha'), quantity: 1 },
-      {
-        item: {
-          ...findMenuItem('paneer-paratha'),
-          id: 'curd',
-          name: 'Curd',
-          price: 70,
-        },
-        quantity: 1,
-      },
-    ],
-    priceSnapshot: {
-      subtotal: 130,
-      taxes: 6,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 136,
-      totalItemCount: 2,
-    },
-    subtotal: 130,
-    taxes: 6,
-    applicableCharges: 0,
-    grandTotal: 136,
-    paymentStatus: 'completed',
-    paymentMethod: 'Card',
-    orderStatus: 'completed',
-    pickupOrDeliveryDetails: {
-      tableNumber: 'Table T-02',
-    },
-    createdAt: '2025-06-14T12:07:00.000Z',
-    updatedAt: '2025-06-14T12:30:00.000Z',
-    displayDate: '14 Jun 2025',
-    displayTime: '12:07 PM',
-    thumbnailUrl: '/assets/orders/thumb-paratha.png',
-    itemsSummary: 'Paneer Paratha (x1), Curd (x1)',
-  },
-  // 4. Order #C1044 — Completed — Delivery — ₹85
-  {
-    orderId: 'C1044',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'delivery',
-    items: [
-      { item: findMenuItem('idli-sambar'), quantity: 1 },
-      {
-        item: {
-          ...findMenuItem('idli-sambar'),
-          id: 'chutney',
-          name: 'Chutney',
-          price: 15,
-        },
-        quantity: 1,
-      },
-    ],
-    priceSnapshot: {
-      subtotal: 70,
-      taxes: 5,
-      packagingCharge: 0,
-      deliveryFee: 10,
-      grandTotal: 85,
-      totalItemCount: 2,
-    },
-    subtotal: 70,
-    taxes: 5,
-    applicableCharges: 10,
-    grandTotal: 85,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'completed',
-    pickupOrDeliveryDetails: {
-      deliveryAddress: 'Rajendra Nagar Terminal, Gate No. 2',
-    },
-    createdAt: '2025-06-12T09:21:00.000Z',
-    updatedAt: '2025-06-12T09:45:00.000Z',
-    displayDate: '12 Jun 2025',
-    displayTime: '09:21 AM',
-    thumbnailUrl: '/assets/orders/thumb-idli.png',
-    itemsSummary: 'Idli Sambar (x1), Chutney (x1)',
-  },
-  // 5. Order #C1043 — Delivered — Takeaway — ₹142
-  {
-    orderId: 'C1043',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'takeaway',
-    items: [
-      { item: findMenuItem('masala-dosa'), quantity: 1 },
-      {
-        item: {
-          ...findMenuItem('masala-dosa'),
-          id: 'sambar',
-          name: 'Sambar',
-          price: 35,
-        },
-        quantity: 1,
-      },
-      {
-        item: {
-          ...findMenuItem('masala-dosa'),
-          id: 'chutney',
-          name: 'Chutney',
-          price: 25,
-        },
-        quantity: 1,
-      },
-    ],
-    priceSnapshot: {
-      subtotal: 130,
-      taxes: 12,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 142,
-      totalItemCount: 3,
-    },
-    subtotal: 130,
-    taxes: 12,
-    applicableCharges: 0,
-    grandTotal: 142,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'delivered',
-    pickupOrDeliveryDetails: {
-      pickupTimeEstimate: '12 mins',
-    },
-    createdAt: '2025-06-10T13:45:00.000Z',
-    updatedAt: '2025-06-10T14:00:00.000Z',
-    displayDate: '10 Jun 2025',
-    displayTime: '01:45 PM',
-    thumbnailUrl: '/assets/orders/thumb-dosa.png',
-    itemsSummary: 'Masala Dosa (x1), Sambar (x1), Chutney (x1)',
-  },
-  // 6. Order #C1042 — Completed — Dinein — ₹180
-  {
-    orderId: 'C1042',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'dinein',
-    items: [{ item: findMenuItem('dark-chocolate-cake'), quantity: 2 }],
-    priceSnapshot: {
-      subtotal: 180,
-      taxes: 0,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 180,
-      totalItemCount: 2,
-    },
-    subtotal: 180,
-    taxes: 0,
-    applicableCharges: 0,
-    grandTotal: 180,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'completed',
-    pickupOrDeliveryDetails: { tableNumber: 'Table T-06' },
-    createdAt: '2025-06-09T16:10:00.000Z',
-    updatedAt: '2025-06-09T16:30:00.000Z',
-    displayDate: '09 Jun 2025',
-    displayTime: '04:10 PM',
-    thumbnailUrl: '/assets/menu/dark-chocolate-cake.png',
-    itemsSummary: 'Dark Chocolate Cake (x2)',
-  },
-  // 7. Order #C1041 — Delivered — Delivery — ₹210
-  {
-    orderId: 'C1041',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'delivery',
-    items: [{ item: findMenuItem('chicken-burger'), quantity: 2 }],
-    priceSnapshot: {
-      subtotal: 158,
-      taxes: 12,
-      packagingCharge: 10,
-      deliveryFee: 30,
-      grandTotal: 210,
-      totalItemCount: 2,
-    },
-    subtotal: 158,
-    taxes: 12,
-    applicableCharges: 40,
-    grandTotal: 210,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'delivered',
-    pickupOrDeliveryDetails: { deliveryAddress: 'Hostel Block B, Room 204' },
-    createdAt: '2025-06-08T19:20:00.000Z',
-    updatedAt: '2025-06-08T19:50:00.000Z',
-    displayDate: '08 Jun 2025',
-    displayTime: '07:20 PM',
-    thumbnailUrl: '/assets/orders/thumb-burger.png',
-    itemsSummary: 'Chicken Burger (x2), Peri Fries (x1)',
-  },
-  // 8. Order #C1040 — Completed — Takeaway — ₹120
-  {
-    orderId: 'C1040',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'takeaway',
-    items: [{ item: findMenuItem('paneer-paratha'), quantity: 2 }],
-    priceSnapshot: {
-      subtotal: 120,
-      taxes: 0,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 120,
-      totalItemCount: 2,
-    },
-    subtotal: 120,
-    taxes: 0,
-    applicableCharges: 0,
-    grandTotal: 120,
-    paymentStatus: 'completed',
-    paymentMethod: 'Cash',
-    orderStatus: 'completed',
-    pickupOrDeliveryDetails: { pickupTimeEstimate: '10 mins' },
-    createdAt: '2025-06-07T10:15:00.000Z',
-    updatedAt: '2025-06-07T10:30:00.000Z',
-    displayDate: '07 Jun 2025',
-    displayTime: '10:15 AM',
-    thumbnailUrl: '/assets/orders/thumb-paratha.png',
-    itemsSummary: 'Paneer Paratha (x2)',
-  },
-  // 9. Order #C1039 — Cancelled — Takeaway — ₹154 (Cancelled #1)
-  {
-    orderId: 'C1039',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'takeaway',
-    items: [{ item: findMenuItem('chicken-burger'), quantity: 1 }],
-    priceSnapshot: {
-      subtotal: 144,
-      taxes: 10,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 154,
-      totalItemCount: 2,
-    },
-    subtotal: 144,
-    taxes: 10,
-    applicableCharges: 0,
-    grandTotal: 154,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'cancelled',
-    pickupOrDeliveryDetails: { notes: 'Cancelled by customer' },
-    createdAt: '2025-06-06T14:12:00.000Z',
-    updatedAt: '2025-06-06T14:15:00.000Z',
-    displayDate: '06 Jun 2025',
-    displayTime: '02:12 PM',
-    thumbnailUrl: '/assets/orders/thumb-burger.png',
-    itemsSummary: 'Chicken Burger (x1), Cold Coffee (x1)',
-  },
-  // 10. Order #C1038 — Completed — Dinein — ₹110
-  {
-    orderId: 'C1038',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'dinein',
-    items: [{ item: findMenuItem('idli-sambar'), quantity: 2 }],
-    priceSnapshot: {
-      subtotal: 110,
-      taxes: 0,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 110,
-      totalItemCount: 2,
-    },
-    subtotal: 110,
-    taxes: 0,
-    applicableCharges: 0,
-    grandTotal: 110,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'completed',
-    pickupOrDeliveryDetails: { tableNumber: 'Table T-01' },
-    createdAt: '2025-06-05T08:40:00.000Z',
-    updatedAt: '2025-06-05T09:05:00.000Z',
-    displayDate: '05 Jun 2025',
-    displayTime: '08:40 AM',
-    thumbnailUrl: '/assets/orders/thumb-idli.png',
-    itemsSummary: 'Idli Sambar (x2)',
-  },
-  // 11. Order #C1037 — Delivered — Delivery — ₹140
-  {
-    orderId: 'C1037',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'delivery',
-    items: [{ item: findMenuItem('masala-dosa'), quantity: 2 }],
-    priceSnapshot: {
-      subtotal: 140,
-      taxes: 0,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 140,
-      totalItemCount: 2,
-    },
-    subtotal: 140,
-    taxes: 0,
-    applicableCharges: 0,
-    grandTotal: 140,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'delivered',
-    pickupOrDeliveryDetails: { deliveryAddress: 'Campus Library Gate' },
-    createdAt: '2025-06-03T18:05:00.000Z',
-    updatedAt: '2025-06-03T18:35:00.000Z',
-    displayDate: '03 Jun 2025',
-    displayTime: '06:05 PM',
-    thumbnailUrl: '/assets/orders/thumb-dosa.png',
-    itemsSummary: 'Masala Dosa (x2)',
-  },
-  // 12. Order #C1036 — Cancelled — Delivery — ₹100 (Cancelled #2)
-  {
-    orderId: 'C1036',
-    userId: 'customer-demo-1',
-    userDisplayName: 'Pratik Kumar',
-    serviceMode: 'delivery',
-    items: [{ item: findMenuItem('jalebi'), quantity: 2 }],
-    priceSnapshot: {
-      subtotal: 100,
-      taxes: 0,
-      packagingCharge: 0,
-      deliveryFee: 0,
-      grandTotal: 100,
-      totalItemCount: 2,
-    },
-    subtotal: 100,
-    taxes: 0,
-    applicableCharges: 0,
-    grandTotal: 100,
-    paymentStatus: 'completed',
-    paymentMethod: 'UPI',
-    orderStatus: 'cancelled',
-    pickupOrDeliveryDetails: { notes: 'Cancelled due to rain delay' },
-    createdAt: '2025-06-01T17:30:00.000Z',
-    updatedAt: '2025-06-01T17:35:00.000Z',
-    displayDate: '01 Jun 2025',
-    displayTime: '05:30 PM',
-    thumbnailUrl: '/assets/orders/thumb-jalebi.png',
-    itemsSummary: 'Jalebi (x2)',
-  },
-];
 
 export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -503,151 +37,57 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }
 
   const activeOperatorRef = useRef(operatorId);
-
   const [loadingOrders, setLoadingOrders] = useState<boolean>(false);
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const initialFallback = operatorId === 'campora-cafe' ? SEED_ORDERS : [];
-    return readScopedOrLegacy<Order[]>(
-      STORAGE_KEYS.ORDERS,
-      LEGACY_STORAGE_KEYS.ORDERS,
-      storageValidators.orders,
-      (val) => {
-        try {
-          return JSON.parse(val) as Order[];
-        } catch {
-          return initialFallback;
-        }
-      },
-      initialFallback,
-      operatorId
-    );
-  });
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  // Reload orders cleanly when canteen operator changes at runtime
+  // Load orders asynchronously from mockOrderAdapter on mount or operator switch
   useEffect(() => {
-    const fallbackOrders = operatorId === 'campora-cafe' ? SEED_ORDERS : [];
-    const loadedOrders = readScopedOrLegacy<Order[]>(
-      STORAGE_KEYS.ORDERS,
-      LEGACY_STORAGE_KEYS.ORDERS,
-      storageValidators.orders,
-      (val) => {
-        try {
-          return JSON.parse(val) as Order[];
-        } catch {
-          return fallbackOrders;
-        }
-      },
-      fallbackOrders,
-      operatorId
-    );
-    setOrders(loadedOrders);
-    activeOperatorRef.current = operatorId;
-  }, [operatorId]);
+    let isCancelled = false;
+    const targetOperator = operatorId;
+    activeOperatorRef.current = targetOperator;
 
-  useEffect(() => {
-    // Guard: Prevent previous operator's in-memory orders from overwriting new operator's storage
-    if (activeOperatorRef.current !== operatorId) return;
-    const storage = safeGetStorage();
-    if (storage) {
-      const scopedKey = getOperatorStorageKey(STORAGE_KEYS.ORDERS, operatorId);
-      storage.setItem(scopedKey, JSON.stringify(orders));
-      if (operatorId === 'campora-cafe') {
-        storage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+    const loadOrders = async () => {
+      setLoadingOrders(true);
+      try {
+        const loaded = await mockOrderAdapter.getOrders(targetOperator);
+        // Guard: Discard if operator changed during async read
+        if (!isCancelled && activeOperatorRef.current === targetOperator) {
+          setOrders(loaded);
+        }
+      } catch (err) {
+        console.warn('Failed to load orders from adapter:', err);
+      } finally {
+        if (!isCancelled && activeOperatorRef.current === targetOperator) {
+          setLoadingOrders(false);
+        }
       }
-    }
-  }, [orders, operatorId]);
-
-  // Real-time Firestore listener if user is authenticated with a real Firebase account
-  useEffect(() => {
-    if (!user?.uid || user.uid.startsWith('customer-demo')) return;
-
-    setLoadingOrders(true);
-    const q = query(collection(db, 'orders'), where('userId', '==', user.uid));
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const remoteOrders: Order[] = [];
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data() as Order;
-          remoteOrders.push(data);
-        });
-        if (remoteOrders.length > 0) {
-          remoteOrders.sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-          setOrders(remoteOrders);
-        }
-        setLoadingOrders(false);
-      },
-      (err) => {
-        console.warn('Firestore orders listener fallback:', err);
-        setLoadingOrders(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user?.uid]);
-
-  const placeOrder = async (params: PlaceOrderParams): Promise<Order> => {
-    const orderId = `C${Math.floor(1048 + Math.random() * 8900)}`;
-    const nowIso = new Date().toISOString();
-    const newOrder: Order = {
-      orderId,
-      userId: user?.uid || 'guest-user',
-      userDisplayName: user?.displayName || 'Campora Guest',
-      serviceMode: params.serviceMode,
-      items: params.items,
-      priceSnapshot: params.pricing,
-      subtotal: params.pricing.subtotal,
-      taxes: params.pricing.taxes,
-      applicableCharges: params.pricing.packagingCharge + params.pricing.deliveryFee,
-      grandTotal: params.pricing.grandTotal,
-      paymentStatus: 'completed',
-      paymentMethod: params.paymentMethod,
-      orderStatus: 'placed',
-      pickupOrDeliveryDetails: params.pickupOrDeliveryDetails,
-      createdAt: nowIso,
-      updatedAt: nowIso,
-      thumbnailUrl: params.items[0]?.item.imageUrl || '/assets/orders/thumb-jalebi.png',
-      itemsSummary: params.items.map((ci) => `${ci.item.name} (x${ci.quantity})`).join(', '),
     };
 
-    setOrders((prev) => [newOrder, ...prev]);
+    loadOrders();
 
-    if (user?.uid && !user.uid.startsWith('customer-demo')) {
-      try {
-        await setDoc(doc(db, 'orders', orderId), {
-          ...newOrder,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.CREATE, `orders/${orderId}`);
-      }
-    }
+    return () => {
+      isCancelled = true;
+    };
+  }, [operatorId]);
 
-    return newOrder;
+  const placeOrder = async (params: PlaceOrderParams): Promise<Order> => {
+    const userPayload = user ? { uid: user.uid, displayName: user.displayName } : undefined;
+    const createdOrder = await mockOrderAdapter.placeOrder(
+      operatorId,
+      params,
+      userPayload
+    );
+    // Prepend locally to keep memory in immediate sync
+    setOrders((prev) => [createdOrder, ...prev]);
+    return createdOrder;
   };
 
-  const cancelOrder = async (orderId: string) => {
+  const cancelOrder = async (orderId: string, reason?: string) => {
+    const cleanId = orderId.replace(/^#/, '');
+    const cancelled = await mockOrderAdapter.cancelOrder(operatorId, cleanId, reason);
     setOrders((prev) =>
-      prev.map((o) =>
-        o.orderId === orderId
-          ? { ...o, orderStatus: 'cancelled', updatedAt: new Date().toISOString() }
-          : o
-      )
+      prev.map((o) => (o.orderId === cleanId ? cancelled : o))
     );
-
-    if (user?.uid && !user.uid.startsWith('customer-demo')) {
-      try {
-        await updateDoc(doc(db, 'orders', orderId), {
-          orderStatus: 'cancelled',
-          updatedAt: serverTimestamp(),
-        });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `orders/${orderId}`);
-      }
-    }
   };
 
   const getOrderById = (orderId: string) => {
@@ -656,11 +96,14 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const clearOrdersState = () => {
+    mockOrderAdapter.clearOrders(operatorId);
     setOrders([]);
   };
 
   const restoreSeedOrdersState = () => {
-    setOrders(SEED_ORDERS);
+    mockOrderAdapter.restoreSeedOrders(operatorId).then((restored) => {
+      setOrders(restored);
+    });
   };
 
   const activeOrder =

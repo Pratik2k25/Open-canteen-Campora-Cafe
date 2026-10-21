@@ -44,17 +44,23 @@ export const STORAGE_EVENTS = {
   LEGACY_VEG_PREFERENCE: 'campora-veg-preference-change',
 } as const;
 
-/**
- * Safely resolves the active browser storage without throwing in SSR or restricted iframe contexts.
- */
 export function safeGetStorage(): StorageLike | null {
   try {
-    if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+    const candidate =
+      typeof window !== 'undefined' && window.localStorage
+        ? window.localStorage
+        : typeof globalThis !== 'undefined' && (globalThis as any).localStorage
+        ? (globalThis as any).localStorage
+        : null;
+
+    if (candidate) {
       // Test read/write access (e.g. Safari private browsing or disabled storage)
       const testKey = '__oc_storage_test__';
-      window.localStorage.setItem(testKey, '1');
-      window.localStorage.removeItem(testKey);
-      return window.localStorage;
+      candidate.setItem(testKey, '1');
+      if (typeof candidate.removeItem === 'function') {
+        candidate.removeItem(testKey);
+      }
+      return candidate;
     }
   } catch {
     // Storage disabled, restricted, or unavailable

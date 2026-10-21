@@ -11,6 +11,7 @@ import { ServiceIncompatibilityModal } from '../components/ServiceIncompatibilit
 import { OfflineIndicator } from '../components/OfflineIndicator.tsx';
 import { VegModeTransitionOverlay } from '../components/animations/VegModeTransition.tsx';
 import { MENU_ITEMS } from '../data/menuData.ts';
+import { useCanteenCatalog } from '../hooks/useCanteenCatalog.ts';
 import { useCart } from '../context/CartContext.tsx';
 import { getServiceTheme } from '../utils/serviceTheme.ts';
 import {
@@ -37,6 +38,7 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => {
   const { isReady, showSkeleton } = usePageReadiness({ pageKey: 'home' });
   const { serviceMode } = useCart();
+  const { items: catalogItems, categories: catalogCategories } = useCanteenCatalog();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -140,15 +142,16 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
   };
 
   // Filter items using `displayedVegOnly` so the menu grid updates behind the full-screen circular transition
+  const activeItems = catalogItems && catalogItems.length > 0 ? catalogItems : MENU_ITEMS;
   const filteredItems = useMemo(() => {
-    return filterMenuItemsForHome(MENU_ITEMS, {
+    return filterMenuItemsForHome(activeItems, {
       searchQuery,
       selectedCategory,
       isVegOnly: vegMachine.displayedVegOnly,
       activeFilters,
       serviceMode,
     });
-  }, [searchQuery, selectedCategory, vegMachine.displayedVegOnly, activeFilters, serviceMode]);
+  }, [activeItems, searchQuery, selectedCategory, vegMachine.displayedVegOnly, activeFilters, serviceMode]);
 
   const isTransitionActive = vegMachine.phase !== 'idle';
 
@@ -200,6 +203,7 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
 
             {/* 4. Food Category Carousel */}
             <CategoryCarousel
+              categories={catalogCategories}
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
             />

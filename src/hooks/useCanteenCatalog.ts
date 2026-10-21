@@ -1,0 +1,72 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { CanteenCatalog, Category, MenuItem } from '../types/index.ts';
+import { useCanteen } from '../context/CanteenContext.tsx';
+import { mockMenuAdapter } from '../adapters/mockMenuAdapter.ts';
+import { CAMPORA_CATALOG } from '../data/mock/index.ts';
+
+export interface UseCanteenCatalogResult {
+  catalog: CanteenCatalog;
+  categories: Category[];
+  items: MenuItem[];
+  loading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+/**
+ * React hook to retrieve the menu catalog for the currently active canteen.
+ * Automatically synchronizes when canteen config switches at runtime.
+ * Guarantees race-condition safety: stale responses from a previous operator
+ * are safely discarded.
+ */
+export function useCanteenCatalog(): UseCanteenCatalogResult {
+  const { config } = useCanteen();
+  const operatorId = config?.identity?.id || 'campora-cafe';
+
+  // Seed initial state synchronously with the matching default or Campora catalog
+  // to prevent unnecessary layout shift on first mount.
+  const [catalog, setCatalog] = useState<CanteenCatalog>(() => {
+    if (operatorId === 'campora-cafe') return CAMPORA_CATALOG;
+    return CAMPORA_CATALOG;
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const activeOperatorRef = useRef(operatorId);
+  activeOperatorRef.current = operatorId;
+
+  const fetchCatalog = useCallback(async () => {
+    const targetOperator = activeOperatorRef.current;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await mockMenuAdapter.getCatalog(targetOperator);
+      // Guard: Discard result if operator changed during async call
+      if (activeOperatorRef.current === targetOperator) {
+        setCatalog(data);
+      }
+    } catch (err) {
+      if (activeOperatorRef.current === targetOperator) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      }
+    } finally {
+      if (activeOperatorRef.current === targetOperator) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCatalog();
+  }, [operatorId, fetchCatalog]);
+
+  return {
+    catalog,
+    categories: catalog.categories,
+    items: catalog.items,
+    loading,
+    error,
+    refetch: fetchCatalog,
+  };
+}

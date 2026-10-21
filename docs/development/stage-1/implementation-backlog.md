@@ -16,11 +16,15 @@ The approved Open Canteen product development roadmap is:
 
 ```
 Stage 1: Core Customer PWA & White-Label Foundation
-├── Step 1.1: Existing Codebase Audit & Assessment [COMPLETED]
-├── Step 1.2: Centralized Canteen Branding Architecture & Rebranding [COMPLETED & AUDITED]
-├── Step 1.3: Unified Mock-Data Architecture & Multi-Canteen Seeds [NEXT MILESTONE]
-├── Step 1.4: Dedicated Full-Screen Cart Experience (/cart)
-└── Step 1.5: Checkout, Token Receipt & Order Confirmation (/checkout)
+├── Step 1.1: Codebase Audit [COMPLETED]
+├── Step 1.2: Centralized Canteen Branding [COMPLETED]
+├── Step 1.3: TypeScript Domain Models & Mock Data Adapters [COMPLETED]
+├── Step 1.4: Home Page Functional Completion [NEXT MILESTONE]
+├── Step 1.5: Floating Cart & Cart Page
+├── Step 1.6: Checkout & Mock Order Placement
+├── Step 1.7: Orders, Profile & Remaining Customer Pages
+├── Step 1.8: Animations, Transitions & Loading
+└── Step 1.9: PWA Finalization & Quality Assurance
 ```
 
 ---
@@ -48,21 +52,68 @@ Stage 1: Core Customer PWA & White-Label Foundation
 
 ---
 
-## 3. Subsequent Stage 1 Backlog Preview
+## 3. Step 1.3 Implementation Status (COMPLETED)
 
-### Step 1.3 — Unified Mock-Data Architecture
-- Consolidate scattered mock objects into a clean, typed `mockData/` module.
-- Provide swappable menu datasets (e.g., Campus Canteen vs. Corporate Café).
-- Ensure cart calculations, order history badges, and profile addresses consume unified types.
+### Status Summary
+- **Step 1.3 Status**: **COMPLETE** (October 2026)
+- **Domain Modeling**: Formalized `CanteenCatalog` and reconciled customer identity/preferences contracts.
+- **Modular Mock Data**: Extracted `CAMPORA_CATALOG` (10 items, 7 categories), `OPEN_CANTEEN_CATALOG` (demo campus menu), `createEmptyCatalog` (safe fallback for unconfigured canteens), 12 verified `CAMPORA_SEED_ORDERS`, and customer profiles (`DEFAULT_MOCK_CUSTOMER_PROFILE` and `createOperatorDefaultProfile`).
+- **Adapter Architecture**: Implemented `IMenuAdapter`, `IOrderAdapter`, `IProfileAdapter` with `MockMenuAdapter`, `MockOrderAdapter`, `MockProfileAdapter` preserving operator isolation and pricing/service invariants.
+- **Profile Adapter & UI Integration**: `ProfilePage.tsx` directly integrates with `mockProfileAdapter` for all profile updates and address management. Zero direct `localStorage` access remains in Profile UI.
+- **Customer Isolation**: Non-Campora operators (`open-canteen`, `my-home`, unknown custom canteens) receive clean guest profiles with empty address books and never inherit Campora's demo customer or hostel addresses.
+- **Validation**: 69 unit tests passing across 10 test suites (0 failures). TypeScript typechecks (`tsc --noEmit`) and production builds succeed with 0 errors.
 
-### Step 1.4 — Dedicated Full-Screen Cart (`/cart`)
-- Upgrade the current placeholder at `/cart` into a full-page cart experience matching the floating cart's item list, bill breakdown, and service mode selector.
-- Retain floating cart drawer on Home as a quick shortcut.
+### Completed Tasks Breakdown
 
-### Step 1.5 — Checkout & Token Receipt (`/checkout`, `/order-confirmation/:id`)
-- Build table/hostel delivery address picker.
-- Add mock UPI / Cash on Counter / Card payment selection.
-- Generate live token slip with estimated preparation countdown.
+| Task ID | Task Description | Target Files | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.3.1** | Canonical domain models & harmonization | `src/types/index.ts`, `src/utils/profileData.ts` | **Complete** | Added `CanteenCatalog`. Reconciled auth user vs profile models with zero runtime breakage. |
+| **1.3.2** | Multi-canteen mock seeds & modular data | `src/data/mock/*` | **Complete** | Modularized Campora (10 items), Open Canteen demo, safe empty catalog, 12 seed orders, and profile fixtures. |
+| **1.3.3** | Adapter interfaces & mock implementations | `src/adapters/*` | **Complete** | `IMenuAdapter`, `IOrderAdapter`, `IProfileAdapter` implemented with operator-scoped persistence. |
+| **1.3.4** | Context & consumer integration | `src/context/OrderContext.tsx`, `src/pages/HomePage.tsx`, `src/pages/ProfilePage.tsx`, `src/hooks/useCanteenCatalog.ts` | **Complete** | Asynchronous data loading with race condition guards. 100% UI and animation preservation. |
+| **1.3.5** | Automated testing & verification | `src/adapters/mockAdapters.test.ts`, `package.json` | **Complete** | 14 adapter tests covering 22 scenarios. All 69 project unit tests pass cleanly. |
+
+---
+
+## 4. Subsequent Stage 1 Backlog Sequence
+
+### Step 1.4 — Home Page Functional Completion
+- Verify and polish category carousel interactions and smooth item filtering.
+- Connect search bar to `searchMenuItems` on `mockMenuAdapter` with debounce and live result count.
+- Filter chips (Veg, Non-Veg, Best Sellers, Fast Delivery) dynamic binding with catalog items.
+- Item card interaction (add, increment, decrement) synchronized with CartContext.
+- Empty states for zero-result search and unconfigured canteens.
+- Preserve Case 3 dynamic service mode theme (Mint Green Dine-in, Warm Beige Takeaway, Soft Blue Delivery).
+
+### Step 1.5 — Floating Cart & Cart Page (`/cart`)
+- Dedicated full-page cart experience at `/cart` matching approved design.
+- Synchronize floating cart drawer on Home with the full `/cart` page.
+- Bill breakdown (subtotal, taxes, packaging, delivery fee) with real-time recalculation.
+- Clear Cart confirmation and item note instructions.
+
+### Step 1.6 — Checkout & Mock Order Placement (`/checkout`, `/order-confirmation/:id`)
+- Service-mode dependent delivery details (Table Number for Dine-in; Counter Pickup estimate for Takeaway; Campus/Hostel Address picker for Delivery).
+- Mock payment method selection (UPI, Cash on Counter, Card).
+- Place order execution through `mockOrderAdapter` with concurrency guards.
+- Order confirmation slip with live token number and preparation progress tracker.
+
+### Step 1.7 — Orders, Profile & Remaining Customer Pages
+- Dedicated `/orders` page with tabs (All Orders, Preparing, Completed, Cancelled).
+- Order details modal, repeat order action, and cancellation flow per adapter rules.
+- Profile page address book management (add new campus hostel/gate address).
+- Customer support sheet with operating hours and counter dialer links.
+
+### Step 1.8 — Animations, Transitions & Loading
+- High-fidelity micro-interactions and transitions across all customer routes.
+- Full-screen VEG mode transition animation with sound/haptics toggle support.
+- Floating cart item fly-in and beverage 3D bottle animations.
+- Page readiness skeletons for Home, Cart, Orders, and Profile.
+
+### Step 1.9 — PWA Finalization & Quality Assurance
+- Service worker precaching and offline fallback screen.
+- Web app manifest verification for installability.
+- Multi-viewport responsive audit (360px to 430px mobile viewports).
+- End-to-end regression test suite covering full customer journey.
 
 ---
 

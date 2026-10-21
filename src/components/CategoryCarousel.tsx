@@ -1,19 +1,23 @@
 import React from 'react';
 import { CATEGORIES } from '../data/menuData.ts';
 
+import type { Category } from '../types/index.ts';
+
 interface CategoryCarouselProps {
   selectedCategory: string;
   onSelectCategory: (categoryId: string) => void;
+  categories?: Category[];
 }
 
 export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
   selectedCategory,
   onSelectCategory,
+  categories = CATEGORIES,
 }) => {
   return (
     <div className="w-full pt-1.5 pb-1 select-none">
       <div className="flex items-start justify-between gap-1.5 overflow-x-auto px-3.5 no-scrollbar scroll-smooth">
-        {CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const isSelected = selectedCategory === cat.id;
 
           return (

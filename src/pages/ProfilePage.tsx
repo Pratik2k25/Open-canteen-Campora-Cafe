@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCanteen } from '../context/CanteenContext.tsx';
 import {
-  mockProfileDataProvider,
   getAvatarInitial,
   validateProfileUpdate,
   type CustomerProfileData,
@@ -12,14 +11,7 @@ import {
   readCanonicalVegPreference,
   writeCanonicalVegPreference,
 } from '../utils/vegModeTransition.ts';
-import {
-  STORAGE_KEYS,
-  LEGACY_STORAGE_KEYS,
-  storageValidators,
-  readScopedOrLegacy,
-  getOperatorStorageKey,
-  safeGetStorage,
-} from '../utils/storageKeys.ts';
+import { mockProfileAdapter } from '../adapters/mockProfileAdapter.ts';
 import { ProfilePageSkeleton } from '../components/skeleton/ProfilePageSkeleton.tsx';
 import { usePageReadiness } from '../hooks/usePageReadiness.ts';
 
@@ -61,21 +53,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const { isReady, showSkeleton } = usePageReadiness({ pageKey: 'profile' });
 
   const [profile, setProfile] = useState<CustomerProfileData>(() => {
-    const fallbackProfile = mockProfileDataProvider.getProfile();
-    const loaded = readScopedOrLegacy<CustomerProfileData>(
-      STORAGE_KEYS.PROFILE,
-      LEGACY_STORAGE_KEYS.PROFILE,
-      storageValidators.profile,
-      (val) => {
-        try {
-          return JSON.parse(val) as CustomerProfileData;
-        } catch {
-          return fallbackProfile;
-        }
-      },
-      fallbackProfile,
-      operatorId
-    );
+    const loaded = mockProfileAdapter.getProfileSync(operatorId);
     const syncedVegMode = readCanonicalVegPreference(loaded.vegMode, undefined, operatorId);
     return {
       ...loaded,
@@ -90,44 +68,29 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [editError, setEditError] = useState<string | null>(null);
   const [statusToast, setStatusToast] = useState<string | null>(null);
 
-  // Reload profile state cleanly when canteen operator changes at runtime
+  // Reload profile state cleanly from mockProfileAdapter when canteen operator changes at runtime
   useEffect(() => {
-    const fallbackProfile = mockProfileDataProvider.getProfile();
-    const loaded = readScopedOrLegacy<CustomerProfileData>(
-      STORAGE_KEYS.PROFILE,
-      LEGACY_STORAGE_KEYS.PROFILE,
-      storageValidators.profile,
-      (val) => {
-        try {
-          return JSON.parse(val) as CustomerProfileData;
-        } catch {
-          return fallbackProfile;
-        }
-      },
-      fallbackProfile,
-      operatorId
-    );
-    const syncedVegMode = readCanonicalVegPreference(loaded.vegMode, undefined, operatorId);
-    setProfile({
-      ...loaded,
-      vegMode: syncedVegMode,
-    });
-    activeOperatorRef.current = operatorId;
-  }, [operatorId]);
+    let isCancelled = false;
+    const targetOperator = operatorId;
+    activeOperatorRef.current = targetOperator;
 
-  const persistProfile = (next: CustomerProfileData) => {
-    setProfile(next);
-    // Prevent in-flight state of previous operator from overwriting new operator's storage
-    if (activeOperatorRef.current !== operatorId) return;
-    const storage = safeGetStorage();
-    if (storage) {
-      const key = getOperatorStorageKey(STORAGE_KEYS.PROFILE, operatorId);
-      storage.setItem(key, JSON.stringify(next));
-      if (operatorId === 'campora-cafe') {
-        storage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(next));
+    const loadProfile = async () => {
+      const loaded = await mockProfileAdapter.getProfile(targetOperator);
+      if (!isCancelled && activeOperatorRef.current === targetOperator) {
+        const syncedVegMode = readCanonicalVegPreference(loaded.vegMode, undefined, targetOperator);
+        setProfile({
+          ...loaded,
+          vegMode: syncedVegMode,
+        });
       }
-    }
-  };
+    };
+
+    loadProfile();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [operatorId]);
 
   const showToast = (msg: string) => {
     setStatusToast(msg);
@@ -136,10 +99,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     }, 2400);
   };
 
-  const handleToggleVegMode = () => {
-    const updated = mockProfileDataProvider.toggleVegMode(profile);
-    persistProfile(updated);
-    writeCanonicalVegPreference(updated.vegMode, undefined, operatorId);
+  const handleToggleVegMode = async () => {
+    const nextVegMode = !profile.vegMode;
+    const updated = await mockProfileAdapter.updateProfile(operatorId, { vegMode: nextVegMode });
+    if (activeOperatorRef.current === operatorId) {
+      setProfile(updated);
+      writeCanonicalVegPreference(updated.vegMode, undefined, operatorId);
+    }
   };
 
   const openEditProfile = () => {
@@ -150,47 +116,52 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     setActiveSheet('editProfile');
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     const validation = validateProfileUpdate({ displayName: editName, email: editEmail });
     if (!validation.valid) {
       setEditError(validation.error || 'Invalid input');
       return;
     }
-    const updated = mockProfileDataProvider.updateProfileInfo(profile, {
-      displayName: editName,
-      email: editEmail,
-      phoneNumber: editPhone,
+    const updated = await mockProfileAdapter.updateProfile(operatorId, {
+      displayName: editName.trim(),
+      email: editEmail.trim(),
+      phoneNumber: editPhone.trim(),
     });
-    persistProfile(updated);
-    setActiveSheet(null);
-    showToast('Profile updated');
+    if (activeOperatorRef.current === operatorId) {
+      setProfile(updated);
+      setActiveSheet(null);
+      showToast('Profile updated');
+    }
   };
 
-  const handleSelectAppearance = (theme: AppearanceTheme) => {
-    const updated = mockProfileDataProvider.updateAppearance(profile, theme);
-    persistProfile(updated);
-    setActiveSheet(null);
-    showToast(`Appearance set to ${theme}`);
+  const handleSelectAppearance = async (theme: AppearanceTheme) => {
+    const updated = await mockProfileAdapter.updateProfile(operatorId, { appearance: theme });
+    if (activeOperatorRef.current === operatorId) {
+      setProfile(updated);
+      setActiveSheet(null);
+      showToast(`Appearance set to ${theme}`);
+    }
   };
 
-  const handleToggleNotificationKey = (key: keyof CustomerProfileData['notifications']) => {
-    const updated = mockProfileDataProvider.updateNotifications(profile, {
-      [key]: !profile.notifications[key],
+  const handleToggleNotificationKey = async (key: keyof CustomerProfileData['notifications']) => {
+    const updated = await mockProfileAdapter.updateProfile(operatorId, {
+      notifications: {
+        ...profile.notifications,
+        [key]: !profile.notifications[key],
+      },
     });
-    persistProfile(updated);
+    if (activeOperatorRef.current === operatorId) {
+      setProfile(updated);
+    }
   };
 
-  const handleSetDefaultAddress = (addressId: string) => {
-    const updated: CustomerProfileData = {
-      ...profile,
-      savedAddresses: profile.savedAddresses.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === addressId,
-      })),
-    };
-    persistProfile(updated);
-    showToast('Default delivery address updated');
+  const handleSetDefaultAddress = async (addressId: string) => {
+    const updated = await mockProfileAdapter.setDefaultAddress(operatorId, addressId);
+    if (activeOperatorRef.current === operatorId) {
+      setProfile(updated);
+      showToast('Default delivery address updated');
+    }
   };
 
   const handleConfirmLogout = () => {
@@ -1029,27 +1000,34 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               {activeSheet === 'addressBook' && (
                 <div className="flex flex-col gap-3">
                   <h3 className="text-[16px] font-bold text-[#111827]">Saved Campus Addresses</h3>
-                  {profile.savedAddresses.map((addr) => (
-                    <div
-                      key={addr.id}
-                      onClick={() => handleSetDefaultAddress(addr.id)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-colors ${
-                        addr.isDefault
-                          ? 'border-[#19B559] bg-[#EBFAF0]/40'
-                          : 'border-neutral-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[13px] font-bold text-[#111827]">
-                          {addr.label} · {addr.buildingOrGate}
-                        </span>
-                        {addr.isDefault && (
-                          <span className="text-[11px] font-bold text-[#16A34A]">Default</span>
-                        )}
-                      </div>
-                      <p className="text-[11.5px] text-[#64748B] mt-0.5">{addr.roomOrLandmark}</p>
+                  {profile.savedAddresses.length === 0 ? (
+                    <div className="py-4 text-center">
+                      <p className="text-[13px] font-medium text-[#64748B]">No saved addresses yet</p>
+                      <p className="text-[11px] text-[#94A3B8] mt-0.5">Addresses added during checkout will appear here.</p>
                     </div>
-                  ))}
+                  ) : (
+                    profile.savedAddresses.map((addr) => (
+                      <div
+                        key={addr.id}
+                        onClick={() => handleSetDefaultAddress(addr.id)}
+                        className={`p-3 rounded-xl border cursor-pointer transition-colors ${
+                          addr.isDefault
+                            ? 'border-[#19B559] bg-[#EBFAF0]/40'
+                            : 'border-neutral-200 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13px] font-bold text-[#111827]">
+                            {addr.label} · {addr.buildingOrGate}
+                          </span>
+                          {addr.isDefault && (
+                            <span className="text-[11px] font-bold text-[#16A34A]">Default</span>
+                          )}
+                        </div>
+                        <p className="text-[11.5px] text-[#64748B] mt-0.5">{addr.roomOrLandmark}</p>
+                      </div>
+                    ))
+                  )}
                   <button
                     type="button"
                     onClick={() => setActiveSheet(null)}
