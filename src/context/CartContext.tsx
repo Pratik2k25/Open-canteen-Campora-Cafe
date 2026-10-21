@@ -170,7 +170,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (sourceElement && !prefersReducedMotion) {
       const rect = sourceElement.getBoundingClientRect();
-      const cartTargetEl = document.getElementById('campora-floating-cart-target');
+      const cartTargetEl =
+        document.getElementById('canteen-floating-cart-target') ||
+        document.getElementById('campora-floating-cart-target');
       const { offsetX, offsetY } = getFlightTargetOffsetForItem(serviceMode, item);
       let targetX = window.innerWidth / 2 + 120 + offsetX;
       let targetY = window.innerHeight - 115 + offsetY;

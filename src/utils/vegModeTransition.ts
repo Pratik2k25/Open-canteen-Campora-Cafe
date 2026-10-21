@@ -61,7 +61,7 @@ export const VEG_TRANSITION_CONFIGS: Record<VegTransitionDirection, VegTransitio
     badgeLine2: 'MODE',
     subtitle: 'Showing only vegetarian favourites',
     secondaryCaption: 'Only vegetarian favourites',
-    brandFooter: 'CAMPORA CAFÉ',
+    brandFooter: 'OPEN CANTEEN',
     overlayBgHex: '#E9FAF4',
     outerRingHex: '#DBF5EB',
     midRingHex: '#CEEFE2',
@@ -78,7 +78,7 @@ export const VEG_TRANSITION_CONFIGS: Record<VegTransitionDirection, VegTransitio
     badgeLine2: 'FOOD',
     subtitle: 'Bringing back the complete menu',
     secondaryCaption: 'Explore the full menu',
-    brandFooter: 'CAMPORA CAFÉ',
+    brandFooter: 'OPEN CANTEEN',
     overlayBgHex: '#FFF9F4',
     outerRingHex: '#FEF3E8',
     midRingHex: '#FEEFE1',
@@ -283,13 +283,15 @@ export function writeCanonicalVegPreference(
     }
   }
 
-  // Also maintain canonical/legacy keys when operator is campora-cafe or omitted
+  // Maintain canonical key when operator is omitted or campora-cafe
   if (!operatorId || operatorId === 'campora-cafe') {
     storage.setItem(VEG_PREFERENCE_STORAGE_KEY, String(nextVegOnly));
-    try {
-      storage.setItem(LEGACY_VEG_PREFERENCE_STORAGE_KEY, String(nextVegOnly));
-    } catch {
-      // Non-critical
+    if (operatorId === 'campora-cafe') {
+      try {
+        storage.setItem(LEGACY_VEG_PREFERENCE_STORAGE_KEY, String(nextVegOnly));
+      } catch {
+        // Non-critical
+      }
     }
 
     const rawProfile = storage.getItem(MOCK_PROFILE_STORAGE_KEY) ?? storage.getItem(LEGACY_MOCK_PROFILE_STORAGE_KEY);
@@ -302,7 +304,9 @@ export function writeCanonicalVegPreference(
         };
         const serialized = JSON.stringify(updatedProfile);
         storage.setItem(MOCK_PROFILE_STORAGE_KEY, serialized);
-        storage.setItem(LEGACY_MOCK_PROFILE_STORAGE_KEY, serialized);
+        if (operatorId === 'campora-cafe') {
+          storage.setItem(LEGACY_MOCK_PROFILE_STORAGE_KEY, serialized);
+        }
       } catch {
         // Ignore malformed profile JSON
       }

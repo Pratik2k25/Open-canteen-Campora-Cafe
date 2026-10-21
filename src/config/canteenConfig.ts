@@ -69,6 +69,10 @@ export interface CanteenContent {
   readonly aboutTitle: string;
   /** Main narrative paragraph about the canteen */
   readonly aboutBody: string;
+  /** Optional custom narrative for the About Your Canteen page */
+  readonly canteenStory?: string;
+  /** Optional custom service description for How We Serve You */
+  readonly servicesDescription?: string;
   /** Optional customer privacy notice (undefined if not provided) */
   readonly privacyNotice?: string;
   /** Footer copyright notice */
@@ -88,6 +92,23 @@ export interface CanteenPWA {
   readonly backgroundColor: string;
 }
 
+export interface CanteenLegal {
+  /** Registered legal/operator business name (e.g. 'Campora Hospitality Services Pvt. Ltd.') */
+  readonly operatorLegalName?: string;
+  /** Official registered address of the operator */
+  readonly registeredAddress?: string;
+  /** Designated privacy contact email */
+  readonly privacyContactEmail?: string;
+  /** Official effective date for customer policies */
+  readonly policyEffectiveDate?: string;
+  /** Current published version of the canteen's legal policies */
+  readonly policyVersion?: string;
+  /** Optional operator-provided cancellation & refund policy guidelines */
+  readonly cancellationPolicyText?: string;
+  /** Verified software license for this deployment (if published) */
+  readonly softwareLicense?: string;
+}
+
 /**
  * Normalized Canteen Configuration
  * Guaranteed complete and non-null for all presentation components.
@@ -99,6 +120,7 @@ export interface CanteenConfig {
   readonly contact: CanteenContact;
   readonly content: CanteenContent;
   readonly pwa: CanteenPWA;
+  readonly legal: CanteenLegal;
 }
 
 // ============================================================================
@@ -147,6 +169,8 @@ export interface CanteenContactInput {
 export interface CanteenContentInput {
   readonly aboutTitle?: string;
   readonly aboutBody?: string;
+  readonly canteenStory?: string;
+  readonly servicesDescription?: string;
   readonly privacyNotice?: string;
   readonly footerCopyright?: string;
 }
@@ -157,6 +181,16 @@ export interface CanteenPWAInput {
   readonly description?: string;
   readonly themeColor?: string;
   readonly backgroundColor?: string;
+}
+
+export interface CanteenLegalInput {
+  readonly operatorLegalName?: string;
+  readonly registeredAddress?: string;
+  readonly privacyContactEmail?: string;
+  readonly policyEffectiveDate?: string;
+  readonly policyVersion?: string;
+  readonly cancellationPolicyText?: string;
+  readonly softwareLicense?: string;
 }
 
 /**
@@ -171,6 +205,7 @@ export interface CanteenConfigInput {
   readonly contact?: CanteenContactInput;
   readonly content?: CanteenContentInput;
   readonly pwa?: CanteenPWAInput;
+  readonly legal?: CanteenLegalInput;
 }
 
 // ============================================================================
@@ -230,23 +265,23 @@ export const OPEN_CANTEEN_PRESET: CanteenConfig = Object.freeze({
     monogram: 'OC',
     tagline: 'Modern Digital Canteen Experience',
     description: 'Modular, open-source canteen ordering and digital dining for campus and institutional dining.',
-    // logoUrl is deliberately undefined to ensure clean typographic monogram fallback
+    logoUrl: '/assets/branding/open-canteen-logo.png',
   }),
   branding: Object.freeze({
-    primaryColor: '#FF5C38',
+    primaryColor: '#166534',
     primaryTextColor: '#FFFFFF',
-    accentColor: '#36B871',
+    accentColor: '#FB4816',
   }),
   location: Object.freeze({
-    displayLocation: 'Campus Cafeteria',
+    displayLocation: 'Central Dining Hall',
     pickupLocations: Object.freeze([
-      'Main Counter • Station 1',
-      'Quick Pickup Counter • Station 2',
+      'Counter 1 • Fresh Food & Meals',
+      'Counter 2 • Quick Bites & Snacks',
+      'Counter 3 • Coffee & Beverages',
     ]),
-    // addressLine and mapUrl are undefined (no fabricated physical address)
   }),
   contact: Object.freeze({
-    // supportPhone and supportEmail are undefined (no fabricated contact details)
+    operatingHours: '8:00 AM – 10:00 PM',
   }),
   content: Object.freeze({
     aboutTitle: 'About Open Canteen',
@@ -256,11 +291,12 @@ export const OPEN_CANTEEN_PRESET: CanteenConfig = Object.freeze({
   }),
   pwa: Object.freeze({
     appName: 'Open Canteen',
-    shortName: 'OpenCanteen',
+    shortName: 'Open Canteen',
     description: 'Modern digital canteen ordering and dining experience.',
-    themeColor: '#FF5C38',
+    themeColor: '#166534',
     backgroundColor: '#F8F9FA',
   }),
+  legal: Object.freeze({}),
 });
 
 /**
@@ -315,6 +351,16 @@ export const CAMPORA_CAFE_PRESET: CanteenConfig = Object.freeze({
     themeColor: '#FF5C38',
     backgroundColor: '#F8F9FA',
   }),
+  legal: Object.freeze({
+    operatorLegalName: 'Campora Café Services',
+    registeredAddress: 'Campora Campus Center, Tech Park North, Bengaluru, Karnataka 560100',
+    privacyContactEmail: 'help@camporacafe.in',
+    policyEffectiveDate: 'October 2026',
+    policyVersion: 'v1.0.0',
+    cancellationPolicyText:
+      'Orders in placed, confirmed, or preparing status may be cancelled by the customer before delivery or completion. Uncollected or cancelled orders do not incur cancellation penalty fees.',
+    softwareLicense: 'Pending formal repository release',
+  }),
 });
 
 /**
@@ -322,13 +368,13 @@ export const CAMPORA_CAFE_PRESET: CanteenConfig = Object.freeze({
  */
 export const CANTEEN_PRESETS: Readonly<Record<string, CanteenConfig>> = Object.freeze({
   'open-canteen': OPEN_CANTEEN_PRESET,
-  'campora-cafe': CAMPORA_CAFE_PRESET,
+  'campora-cafe': OPEN_CANTEEN_PRESET, // Legacy ID normalized to Open Canteen
 });
 
 /**
- * Default preset used during Stage 1 development to preserve approved Campora visual baseline
+ * Default preset for the application — Open Canteen is the sole active brand.
  */
-export const DEFAULT_CANTEEN_PRESET: CanteenConfig = CAMPORA_CAFE_PRESET;
+export const DEFAULT_CANTEEN_PRESET: CanteenConfig = OPEN_CANTEEN_PRESET;
 
 // ============================================================================
 // 5. Immutable Configuration Resolver
@@ -399,6 +445,8 @@ export function resolveCanteenConfig(
   const aboutBody =
     input.content?.aboutBody?.trim() ||
     `Welcome to ${rawDisplayName}. Enjoy fresh meals, quick ordering, and seamless dining.`;
+  const canteenStory = input.content?.canteenStory?.trim() || undefined;
+  const servicesDescription = input.content?.servicesDescription?.trim() || undefined;
   const privacyNotice = input.content?.privacyNotice?.trim() || undefined;
   const footerCopyright =
     input.content?.footerCopyright?.trim() ||
@@ -410,6 +458,15 @@ export function resolveCanteenConfig(
   const pwaDescription = input.pwa?.description?.trim() || description;
   const themeColor = input.pwa?.themeColor?.trim() || primaryColor;
   const backgroundColor = input.pwa?.backgroundColor?.trim() || '#F8F9FA';
+
+  // Resolve legal policies and operator compliance
+  const operatorLegalName = input.legal?.operatorLegalName?.trim() || base.legal?.operatorLegalName;
+  const registeredAddress = input.legal?.registeredAddress?.trim() || base.legal?.registeredAddress;
+  const privacyContactEmail = input.legal?.privacyContactEmail?.trim() || base.legal?.privacyContactEmail;
+  const policyEffectiveDate = input.legal?.policyEffectiveDate?.trim() || base.legal?.policyEffectiveDate;
+  const policyVersion = input.legal?.policyVersion?.trim() || base.legal?.policyVersion;
+  const cancellationPolicyText = input.legal?.cancellationPolicyText?.trim() || base.legal?.cancellationPolicyText;
+  const softwareLicense = input.legal?.softwareLicense?.trim() || base.legal?.softwareLicense;
 
   // Construct immutable normalized configuration
   return Object.freeze({
@@ -443,6 +500,8 @@ export function resolveCanteenConfig(
     content: Object.freeze({
       aboutTitle,
       aboutBody,
+      ...(canteenStory ? { canteenStory } : {}),
+      ...(servicesDescription ? { servicesDescription } : {}),
       ...(privacyNotice ? { privacyNotice } : {}),
       footerCopyright,
     }),
@@ -453,6 +512,15 @@ export function resolveCanteenConfig(
       themeColor,
       backgroundColor,
     }),
+    legal: Object.freeze({
+      ...(operatorLegalName ? { operatorLegalName } : {}),
+      ...(registeredAddress ? { registeredAddress } : {}),
+      ...(privacyContactEmail ? { privacyContactEmail } : {}),
+      ...(policyEffectiveDate ? { policyEffectiveDate } : {}),
+      ...(policyVersion ? { policyVersion } : {}),
+      ...(cancellationPolicyText ? { cancellationPolicyText } : {}),
+      ...(softwareLicense ? { softwareLicense } : {}),
+    }),
   });
 }
 
@@ -460,7 +528,7 @@ export function resolveCanteenConfig(
  * Resolves deployment-specific canteen configuration from Vite build/runtime environment variables.
  * Guarantees that environment-configured PWA deployments initialize the Customer PWA
  * consistently with the generated manifest instead of falling back to Campora Café.
- * Defaults to CAMPORA_CAFE_PRESET when no environment overrides are defined.
+ * Defaults to DEFAULT_CANTEEN_PRESET (Open Canteen) when no environment overrides are defined.
  */
 export function getDeploymentCanteenConfig(): CanteenConfig {
   try {
@@ -476,7 +544,7 @@ export function getDeploymentCanteenConfig(): CanteenConfig {
     }
 
     // 2. If custom environment-level operator branding is defined
-    if (envAppName && envAppName !== 'Campora Café') {
+    if (envAppName && envAppName !== 'Campora Café' && envAppName !== 'Open Canteen') {
       return resolveCanteenConfig(
         {
           identity: {

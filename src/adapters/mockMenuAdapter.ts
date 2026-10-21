@@ -22,7 +22,7 @@ export class MockMenuAdapter implements IMenuAdapter {
   }
 
   public async getCatalog(operatorId: string): Promise<CanteenCatalog> {
-    const id = operatorId || 'campora-cafe';
+    const id = operatorId || 'open-canteen';
 
     if (this.customCatalogs.has(id)) {
       return this.customCatalogs.get(id)!;

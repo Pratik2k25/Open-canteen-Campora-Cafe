@@ -6,6 +6,8 @@ import {
   computeNavState,
   resolveProfileBackTarget,
 } from '../utils/navigationState.ts';
+import { PwaUpdatePrompt } from './PwaUpdatePrompt.tsx';
+import { OfflineIndicator } from './OfflineIndicator.tsx';
 
 interface CustomerNavigationShellProps {
   children?: React.ReactNode;
@@ -168,6 +170,12 @@ export const CustomerNavigationShell: React.FC<CustomerNavigationShellProps> = (
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#F8F9FA]">
+      {/* Global PWA Update Notification */}
+      <PwaUpdatePrompt />
+
+      {/* Global Offline Status Indicator */}
+      <OfflineIndicator />
+
       {/* MAIN SURFACE (Home, Orders, and Other Screens + Persistent BottomNav) */}
       <div
         id="campora-main-surface"
@@ -219,7 +227,10 @@ export const CustomerNavigationShell: React.FC<CustomerNavigationShellProps> = (
 
           {/* Approved Left-Edge Attached Floating Coral Home Pill */}
           {/* Anchored to Profile Viewport Shell (Option 2: moves together during page transitions) */}
-          <div className="absolute bottom-2.5 left-0 right-0 z-30 pointer-events-none flex justify-center">
+          <div
+            style={{ bottom: 'max(0.625rem, env(safe-area-inset-bottom, 0px))' }}
+            className="absolute left-0 right-0 z-30 pointer-events-none flex justify-center"
+          >
             <div className="w-full max-w-[430px] flex justify-start pointer-events-auto">
               <button
                 type="button"

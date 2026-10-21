@@ -18,6 +18,7 @@ import {
   Check,
   AlertCircle,
   PlusCircle,
+  WifiOff,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
 import { useOrders } from '../context/OrderContext.tsx';
@@ -38,8 +39,8 @@ export const CheckoutPage: React.FC = () => {
   const { items, pricing, serviceMode, clearCart } = useCart();
   const { placeOrder } = useOrders();
 
-  const operatorId = config?.identity?.id || 'campora-cafe';
-  const canteenName = config?.identity?.displayName || 'Campora Café';
+  const operatorId = config?.identity?.id || 'open-canteen';
+  const canteenName = config?.identity?.displayName || 'Open Canteen';
   const displayLocation = config?.location?.displayLocation || 'Campus Cafeteria';
   const serviceTheme = getServiceTheme(serviceMode);
 
@@ -65,6 +66,22 @@ export const CheckoutPage: React.FC = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Connectivity tracking for transparent offline mock order feedback
+  const [isOffline, setIsOffline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   // Prefill customer profile & addresses for active operator
   useEffect(() => {
     let isMounted = true;
@@ -74,8 +91,8 @@ export const CheckoutPage: React.FC = () => {
         if (!isMounted) return;
 
         // Prefill name & phone
-        const defaultFallbackName = operatorId === 'campora-cafe' ? 'Pratik Kumar' : 'Guest Customer';
-        const defaultFallbackPhone = operatorId === 'campora-cafe' ? '+91 98765 43210' : '';
+        const defaultFallbackName = 'Guest Customer';
+        const defaultFallbackPhone = '';
         const defaultName = profile.displayName || user?.displayName || defaultFallbackName;
         const defaultPhone = profile.phoneNumber || user?.phoneNumber || defaultFallbackPhone;
         setCustomerName((prev) => (prev ? prev : defaultName));
@@ -488,7 +505,7 @@ export const CheckoutPage: React.FC = () => {
                           setFormErrors((prev) => ({ ...prev, customerName: '' }));
                         }
                       }}
-                      placeholder={operatorId === 'campora-cafe' ? 'e.g. Pratik Kumar' : 'e.g. Guest Customer'}
+                      placeholder="e.g. Guest Customer"
                       maxLength={60}
                       className={`w-full bg-neutral-50 border text-[13px] rounded-xl px-3 py-2 text-neutral-800 placeholder-neutral-400 focus:outline-none focus:bg-white transition ${
                         formErrors.customerName
@@ -843,6 +860,20 @@ export const CheckoutPage: React.FC = () => {
                 </p>
               </div>
 
+              {/* Transparent Offline Mode Notice */}
+              {isOffline && (
+                <div
+                  data-testid="checkout-offline-notice"
+                  role="status"
+                  className="bg-neutral-100 border border-neutral-300/80 rounded-xl p-2.5 flex items-start gap-2 text-neutral-800 text-[11px] leading-relaxed animate-in fade-in"
+                >
+                  <WifiOff className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
+                  <p>
+                    <strong className="font-bold">Offline Device:</strong> You are currently offline. Your mock order will be safely stored locally in this browser.
+                  </p>
+                </div>
+              )}
+
               {/* Payment Methods Radios */}
               <div className="space-y-2 pt-1">
                 {/* 1. Demo UPI */}
@@ -953,7 +984,8 @@ export const CheckoutPage: React.FC = () => {
         {!isCartEmpty && (
           <aside
             aria-label="Checkout Confirmation"
-            className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/80 py-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
+            style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
+            className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/80 pt-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
           >
             <div className="w-full max-w-[430px] mx-auto flex items-center justify-between gap-3">
               <div>

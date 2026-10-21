@@ -29,7 +29,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ onNavigate }
   return (
     <nav
       aria-label="Bottom Navigation"
-      className="fixed bottom-2.5 left-0 right-0 z-40 select-none pointer-events-none"
+      style={{ bottom: 'max(0.625rem, env(safe-area-inset-bottom, 0px))' }}
+      className="fixed left-0 right-0 z-40 select-none pointer-events-none"
     >
       <div className="flex items-center justify-between max-w-[430px] mx-auto w-full pointer-events-auto pl-3 pr-0 gap-2.5">
         {/* GROUP A: Joined Home + Order White Container with Sliding Charcoal Indicator */}

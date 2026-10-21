@@ -428,7 +428,7 @@ export const FloatingCart: React.FC = () => {
       <div className="fixed bottom-[62px] left-0 right-0 z-30 pointer-events-none select-none">
         <div className="max-w-[430px] mx-auto w-full px-2.5 flex justify-end">
           <button
-            id="campora-floating-cart-target"
+            id="canteen-floating-cart-target"
             type="button"
             onClick={handleFloatingCartClick}
             data-testid="floating-cart-button"

@@ -37,7 +37,7 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ hideBottomNav 
   const { getOrderById, cancelOrder, loadingOrders } = useOrders();
   const { items: cartItems, addItem } = useCart();
   const { config } = useCanteen();
-  const operatorId = config?.identity?.id || 'campora-cafe';
+  const operatorId = config?.identity?.id || 'open-canteen';
 
   const order = id ? getOrderById(id) : undefined;
 

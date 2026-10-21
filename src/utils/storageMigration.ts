@@ -157,7 +157,7 @@ import { getDeploymentCanteenConfig } from '../config/canteenConfig.ts';
 // Deterministically execute once at module evaluation time in browser
 if (typeof window !== 'undefined') {
   try {
-    const activeOperatorId = getDeploymentCanteenConfig()?.identity?.id || 'campora-cafe';
+    const activeOperatorId = getDeploymentCanteenConfig()?.identity?.id || 'open-canteen';
     runStorageMigration(safeGetStorage(), activeOperatorId);
   } catch {
     // Fail silently in restricted environments

@@ -33,8 +33,8 @@ export function createOperatorDefaultProfile(operatorId: string): CustomerProfil
  */
 export const DEFAULT_MOCK_AUTH_USER: UserProfile = {
   uid: 'customer-demo-1',
-  displayName: 'Pratik Kumar',
-  email: 'devlopwithpratik@gmail.com',
+  displayName: 'Alex Morgan',
+  email: 'alex.morgan@opencanteen.org',
   phoneNumber: '+91 98765 43210',
   createdAt: '2025-06-01T00:00:00.000Z',
   preferences: {

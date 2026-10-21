@@ -109,7 +109,7 @@ export const OPEN_CANTEEN_MENU_ITEMS: MenuItem[] = [
     description: 'Aromatic dark-roast chicory blend brewed strong with hot frothed milk.',
     price: 35,
     categoryId: 'beverages',
-    imageUrl: '/assets/menu/campora-coffee.png',
+    imageUrl: '/assets/menu/filter-coffee.png',
     visualType: 'coffee-cup',
     cartAssetUrl: '/assets/floating-cart/beverages/coffee-cup.webp',
     foodType: 'veg',
@@ -152,7 +152,7 @@ export const OPEN_CANTEEN_MENU_ITEMS: MenuItem[] = [
 
 export const OPEN_CANTEEN_CATALOG: CanteenCatalog = {
   canteenId: 'open-canteen',
-  canteenName: 'Open Canteen Demo',
+  canteenName: 'Open Canteen',
   categories: OPEN_CANTEEN_CATEGORIES,
   items: OPEN_CANTEEN_MENU_ITEMS,
   updatedAt: '2026-10-21T00:00:00.000Z',

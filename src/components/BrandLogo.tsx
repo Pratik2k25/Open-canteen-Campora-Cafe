@@ -84,7 +84,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs font-black text-sm tracking-wider uppercase"
             style={{
-              backgroundColor: branding.primaryColor || '#FF5C38',
+              backgroundColor: branding.primaryColor || '#166534',
               color: branding.primaryTextColor || '#FFFFFF',
             }}
             aria-hidden="true"

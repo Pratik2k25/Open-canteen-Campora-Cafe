@@ -256,7 +256,7 @@ export const FLOATING_CART_CONTAINER_CONFIG: Record<
       basePngSrc: '/assets/floating-cart/takeaway/takeaway-bag-closed.png',
       containerOffsetXPct: 0,
       containerScale: 1,
-      alt: 'Empty closed Campora kraft takeaway bag',
+      alt: 'Empty closed kraft takeaway bag',
       modeTitle: 'Takeaway Bag',
       emptySubtitle: 'Your takeaway bag is empty — tap ADD on any dish',
       badgeColorHex: '#9A4A12',
@@ -272,7 +272,7 @@ export const FLOATING_CART_CONTAINER_CONFIG: Record<
       frontWallPngSrc: '/assets/floating-cart/takeaway/takeaway-bag-front.png',
       containerOffsetXPct: 0,
       containerScale: 1,
-      alt: 'Open Campora kraft takeaway bag with your selected order',
+      alt: 'Open kraft takeaway bag with your selected order',
       modeTitle: 'Takeaway Bag',
       emptySubtitle: 'Your takeaway bag is empty — tap ADD on any dish',
       badgeColorHex: '#9A4A12',
@@ -287,7 +287,7 @@ export const FLOATING_CART_CONTAINER_CONFIG: Record<
       basePngSrc: '/assets/floating-cart/delivery-empty.png',
       containerOffsetXPct: 0,
       containerScale: 1,
-      alt: 'Empty closed Campora handled kraft delivery box',
+      alt: 'Empty closed handled kraft delivery box',
       modeTitle: 'Delivery Box',
       emptySubtitle: 'Your delivery box is empty — tap ADD on any dish',
       badgeColorHex: '#0D528C',
@@ -302,7 +302,7 @@ export const FLOATING_CART_CONTAINER_CONFIG: Record<
       frontWallPngSrc: '/assets/floating-cart/delivery-front-wall.png',
       containerOffsetXPct: 0,
       containerScale: 1,
-      alt: 'Open Campora handled kraft delivery box with your selected order',
+      alt: 'Open handled kraft delivery box with your selected order',
       modeTitle: 'Delivery Box',
       emptySubtitle: 'Your delivery box is empty — tap ADD on any dish',
       badgeColorHex: '#0D528C',
@@ -315,7 +315,7 @@ export const FLOATING_CART_CONTAINER_CONFIG: Record<
  * Mode-specific perspective coordinates for 1, 2, or 3 solid food items inside the container.
  * For Takeaway, coordinates follow the exact three-quarter diagonal opening of `takeaway-bag-open.webp`
  * (`topPct: 19%..25%`), so food sits inside the dark interior opening and is naturally occluded along its bottom edge
- * by `takeaway-bag-front.webp` (`Layer 4`), never covering the Campora Café logo.
+ * by `takeaway-bag-front.webp` (`Layer 4`), never covering the bag branding.
  */
 const MODE_FOOD_SLOTS: Record<ServiceMode, Record<1 | 2 | 3, VisualSlotCoordinate[]>> = {
   dinein: {
@@ -359,7 +359,7 @@ const MODE_FOOD_SLOTS: Record<ServiceMode, Record<1 | 2 | 3, VisualSlotCoordinat
 /**
  * Upright beverage slot coordinates positioned beside/near the container:
  * - Takeaway: Standing beside the lower-left of the kraft paper bag (`leftPct: 21%, topPct: 62%`),
- *   upright on the same implied surface, never covering the Campora Café branding on the bag.
+ *   upright on the same implied surface, never covering the branding on the bag.
  * - Dinein: Standing upright near the upper-left rim of the ceramic plate (`leftPct: 22%, topPct: 36%`)
  * - Delivery: Standing upright beside the left wall of the handled meal box (`leftPct: 21%, topPct: 57%`)
  */
@@ -490,7 +490,7 @@ export function getBeverageSlotsForMode(
 }
 
 /**
- * Computes the flight landing target pixel offset relative to the center of `#campora-floating-cart-target`
+ * Computes the flight landing target pixel offset relative to the center of `#canteen-floating-cart-target`
  * so food items arc into the container interior while beverage items arc to the beverage position beside the container.
  */
 export function getFlightTargetOffsetForItem(

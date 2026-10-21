@@ -17,6 +17,15 @@ export function computeNavState(pathname: string): NavState {
   const isCheckoutActive = pathname === '/checkout' || pathname.startsWith('/checkout/');
   const isConfirmationActive =
     pathname === '/order-confirmation' || pathname.startsWith('/order-confirmation/');
+  const isPrivacyOrLegalActive =
+    pathname === '/privacy' ||
+    pathname.startsWith('/privacy/') ||
+    pathname === '/legal' ||
+    pathname.startsWith('/legal/') ||
+    pathname === '/about-canteen' ||
+    pathname.startsWith('/about-canteen/') ||
+    pathname === '/about-open-canteen' ||
+    pathname.startsWith('/about-open-canteen/');
   const isHomeActive = pathname === '/';
 
   let currentTab: NavTab = 'other';
@@ -30,9 +39,13 @@ export function computeNavState(pathname: string): NavState {
     isOrderActive,
     isProfileActive,
     isCartActive,
-    // BottomNav is strictly hidden on /profile, /cart, /checkout, and /order-confirmation
+    // BottomNav is strictly hidden on profile, cart, checkout, confirmation, legal, and informational subpages
     showBottomNav:
-      !isProfileActive && !isCartActive && !isCheckoutActive && !isConfirmationActive,
+      !isProfileActive &&
+      !isCartActive &&
+      !isCheckoutActive &&
+      !isConfirmationActive &&
+      !isPrivacyOrLegalActive,
     sliderPosition: isOrderActive ? 1 : 0,
   };
 }

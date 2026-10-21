@@ -41,7 +41,7 @@ export const CartPage: React.FC = () => {
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const [activeNoteItemId, setActiveNoteItemId] = useState<string | null>(null);
 
-  const canteenName = config?.identity?.displayName || 'Campora Café';
+  const canteenName = config?.identity?.displayName || 'Open Canteen';
   const serviceTheme = getServiceTheme(serviceMode);
   const isCartEmpty = items.length === 0;
 
@@ -500,7 +500,8 @@ export const CartPage: React.FC = () => {
         {!isCartEmpty && (
           <aside
             aria-label="Checkout Actions"
-            className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/80 py-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
+            style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
+            className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/80 pt-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
           >
             <div className="w-full max-w-[430px] mx-auto flex items-center justify-between gap-3">
               <div>

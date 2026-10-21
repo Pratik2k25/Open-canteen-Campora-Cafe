@@ -26,7 +26,7 @@ export class MockProfileAdapter implements IProfileAdapter {
   }
 
   private readStorageProfile(operatorId: string): CustomerProfileData {
-    const id = operatorId || 'campora-cafe';
+    const id = operatorId || 'open-canteen';
     const storage = this.getStorage();
     const fallback =
       id === 'campora-cafe'
@@ -51,7 +51,7 @@ export class MockProfileAdapter implements IProfileAdapter {
   }
 
   private writeStorageProfile(operatorId: string, profile: CustomerProfileData): void {
-    const id = operatorId || 'campora-cafe';
+    const id = operatorId || 'open-canteen';
     const storage = this.getStorage();
     if (!storage) return;
 
@@ -181,7 +181,7 @@ export class MockProfileAdapter implements IProfileAdapter {
   }
 
   public async resetProfile(operatorId: string): Promise<CustomerProfileData> {
-    const id = operatorId || 'campora-cafe';
+    const id = operatorId || 'open-canteen';
     const defaultProfile =
       id === 'campora-cafe'
         ? DEFAULT_MOCK_CUSTOMER_PROFILE

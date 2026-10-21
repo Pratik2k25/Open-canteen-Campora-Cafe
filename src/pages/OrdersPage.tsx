@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../components/Header.tsx';
 import { BottomNavigation } from '../components/BottomNavigation.tsx';
-import { OfflineIndicator } from '../components/OfflineIndicator.tsx';
 import { OrderCard } from '../components/OrderCard.tsx';
 import { OrderHistorySkeleton } from '../components/skeleton/OrderHistorySkeleton.tsx';
 import { usePageReadiness } from '../hooks/usePageReadiness.ts';
@@ -61,9 +60,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ hideBottomNav = false })
   return (
     <div className="min-h-screen bg-[#FCFCFC] text-neutral-900 pb-24 select-none flex flex-col items-center transition-opacity duration-200">
       <div className="w-full max-w-[430px] min-h-screen bg-[#FCFCFC] relative shadow-sm flex flex-col">
-        <OfflineIndicator />
-
-        {/* 1. LOCKED CAMPORA CAFÉ HEADER */}
+        {/* 1. BRANDED HEADER */}
         <Header />
 
         {/* 2. "MY ORDERS" MINT HERO BANNER */}

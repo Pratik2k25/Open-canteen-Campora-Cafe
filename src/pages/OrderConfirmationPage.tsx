@@ -32,7 +32,7 @@ export const OrderConfirmationPage: React.FC = () => {
   const { config } = useCanteen();
   const { getOrderById, loadingOrders } = useOrders();
 
-  const canteenName = config?.identity?.displayName || 'Campora Café';
+  const canteenName = config?.identity?.displayName || 'Open Canteen';
   const displayLocation = config?.location?.displayLocation || 'Campus Cafeteria';
 
   const order = id ? getOrderById(id) : undefined;

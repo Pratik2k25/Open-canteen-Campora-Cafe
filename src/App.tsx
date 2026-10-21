@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CanteenProvider } from './context/CanteenContext.tsx';
 import { CanteenMetadataSync } from './components/CanteenMetadataSync.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
@@ -13,6 +13,11 @@ import { CartPage } from './pages/CartPage.tsx';
 import { CheckoutPage } from './pages/CheckoutPage.tsx';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage.tsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.tsx';
+import { AccountPrivacyPage } from './pages/AccountPrivacyPage.tsx';
+import { AboutCanteenPage } from './pages/AboutCanteenPage.tsx';
+import { AboutOpenCanteenPage } from './pages/AboutOpenCanteenPage.tsx';
+import { LegalPoliciesPage } from './pages/LegalPoliciesPage.tsx';
+import { PolicyDetailPage } from './pages/PolicyDetailPage.tsx';
 
 export default function App() {
   return (
@@ -66,11 +71,47 @@ export default function App() {
               />
               <Route
                 path="/addresses"
-                element={<PlaceholderPage title="Saved Addresses" description="Hostel, campus, and room delivery addresses." />}
+                element={<Navigate to="/profile?sheet=addressBook" replace />}
               />
               <Route
                 path="/settings"
-                element={<PlaceholderPage title="Settings" description="PWA, notifications, and application settings." />}
+                element={<Navigate to="/profile?sheet=appearance" replace />}
+              />
+              <Route
+                path="/privacy"
+                element={<AccountPrivacyPage />}
+              />
+              <Route
+                path="/account-privacy"
+                element={<Navigate to="/privacy" replace />}
+              />
+              <Route
+                path="/profile/about-canteen"
+                element={<AboutCanteenPage />}
+              />
+              <Route
+                path="/about-canteen"
+                element={<Navigate to="/profile/about-canteen" replace />}
+              />
+              <Route
+                path="/profile/about-open-canteen"
+                element={<AboutOpenCanteenPage />}
+              />
+              <Route
+                path="/about-open-canteen"
+                element={<Navigate to="/profile/about-open-canteen" replace />}
+              />
+              <Route
+                path="/profile/legal"
+                element={<LegalPoliciesPage />}
+              />
+              <Route
+                path="/profile/legal/:policyId"
+                element={<PolicyDetailPage />}
+              />
+              <Route
+                path="/legal"
+                element={<Navigate to="/profile/legal" replace />}
               />
               <Route
                 path="*"

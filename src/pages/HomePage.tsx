@@ -8,7 +8,6 @@ import { FoodCard } from '../components/FoodCard.tsx';
 import { FloatingCart } from '../components/FloatingCart.tsx';
 import { BottomNavigation } from '../components/BottomNavigation.tsx';
 import { ServiceIncompatibilityModal } from '../components/ServiceIncompatibilityModal.tsx';
-import { OfflineIndicator } from '../components/OfflineIndicator.tsx';
 import { VegModeTransitionOverlay } from '../components/animations/VegModeTransition.tsx';
 import { MENU_ITEMS } from '../data/menuData.ts';
 import { useCanteen } from '../context/CanteenContext.tsx';
@@ -39,7 +38,7 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => {
   const { config } = useCanteen();
-  const operatorId = config?.identity?.id || 'campora-cafe';
+  const operatorId = config?.identity?.id || 'open-canteen';
   const { isReady, showSkeleton } = usePageReadiness({ pageKey: 'home' });
   const { serviceMode } = useCart();
   const { items: catalogItems, categories: catalogCategories } = useCanteenCatalog();
@@ -194,9 +193,6 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
     <div className="min-h-screen bg-[#FFFFFF] text-neutral-900 pb-28 flex flex-col items-center transition-opacity duration-200">
       {/* Mobile Wrapper enforcing Android mobile proportion */}
       <div className="w-full max-w-[430px] min-h-screen bg-[#FFFFFF] flex flex-col relative shadow-sm">
-        {/* Offline indicator */}
-        <OfflineIndicator />
-
         {/* 1. Branded Header */}
         <Header />
 

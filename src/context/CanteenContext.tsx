@@ -9,9 +9,9 @@
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import type { CanteenConfig, CanteenConfigInput } from '../types/index.ts';
 import {
-  CAMPORA_CAFE_PRESET,
   DEFAULT_CANTEEN_PRESET,
   OPEN_CANTEEN_PRESET,
+  CANTEEN_PRESETS,
   resolveCanteenConfig,
   getDeploymentCanteenConfig,
 } from '../config/canteenConfig.ts';
@@ -54,6 +54,17 @@ export const CanteenProvider: React.FC<CanteenProviderProps> = ({
   // Resolve initial configuration once deterministically
   const initialResolvedConfig = useMemo<CanteenConfig>(() => {
     if (!initialConfig) {
+      if (typeof window !== 'undefined') {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const canteenParam = params.get('canteen') || params.get('operator');
+          if (canteenParam && CANTEEN_PRESETS[canteenParam]) {
+            return CANTEEN_PRESETS[canteenParam];
+          }
+        } catch {
+          // ignore URL parsing error
+        }
+      }
       return getDeploymentCanteenConfig();
     }
     // If it's already a complete normalized CanteenConfig preset

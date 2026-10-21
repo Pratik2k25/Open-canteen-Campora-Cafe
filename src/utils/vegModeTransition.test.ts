@@ -37,7 +37,7 @@ test('Visual config matches approved MP4 for both VEG ON and VEG OFF directions'
   assert.equal(onCfg.badgeLine1, 'VEG');
   assert.equal(onCfg.badgeLine2, 'MODE');
   assert.equal(onCfg.subtitle, 'Showing only vegetarian favourites');
-  assert.equal(onCfg.brandFooter, 'CAMPORA CAFÉ');
+  assert.equal(onCfg.brandFooter, 'OPEN CANTEEN');
   assert.equal(onCfg.overlayBgHex, '#E9FAF4');
   assert.equal(onCfg.badgeBgHex, '#087455');
 
@@ -46,7 +46,7 @@ test('Visual config matches approved MP4 for both VEG ON and VEG OFF directions'
   assert.equal(offCfg.badgeLine1, 'ALL');
   assert.equal(offCfg.badgeLine2, 'FOOD');
   assert.equal(offCfg.subtitle, 'Bringing back the complete menu');
-  assert.equal(offCfg.brandFooter, 'CAMPORA CAFÉ');
+  assert.equal(offCfg.brandFooter, 'OPEN CANTEEN');
   assert.equal(offCfg.overlayBgHex, '#FFF9F4');
   assert.equal(offCfg.badgeBgHex, '#B65D22');
 
@@ -59,7 +59,7 @@ test('Visual config matches approved MP4 for both VEG ON and VEG OFF directions'
 test('Task 1.2.5: getVegTransitionVisualConfig parameterizes brandFooter dynamically', () => {
   // Default fallback (no brand passed)
   const defaultCfg = getVegTransitionVisualConfig(true);
-  assert.equal(defaultCfg.brandFooter, 'CAMPORA CAFÉ');
+  assert.equal(defaultCfg.brandFooter, 'OPEN CANTEEN');
 
   // Open Canteen
   const openCanteenCfg = getVegTransitionVisualConfig(true, 'Open Canteen');

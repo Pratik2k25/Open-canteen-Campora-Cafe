@@ -1,8 +1,129 @@
 import type { Order } from '../../types/index.ts';
 import { CAMPORA_MENU_ITEMS } from './camporaCatalog.ts';
+import { OPEN_CANTEEN_MENU_ITEMS } from './openCanteenCatalog.ts';
 
 const findMenuItem = (id: string) =>
   CAMPORA_MENU_ITEMS.find((m) => m.id === id) || CAMPORA_MENU_ITEMS[0];
+
+const findOpenCanteenItem = (id: string) =>
+  OPEN_CANTEEN_MENU_ITEMS.find((m) => m.id === id) || OPEN_CANTEEN_MENU_ITEMS[0];
+
+/**
+ * Approved demonstration seed orders for Open Canteen.
+ * Strictly uses Open Canteen menu items and neutral customer data.
+ */
+export const OPEN_CANTEEN_SEED_ORDERS: Order[] = [
+  // 1. Order #C1047 — Preparing — Dinein — ₹95
+  {
+    orderId: 'C1047',
+    userId: 'customer-demo-1',
+    userDisplayName: 'Guest Customer',
+    serviceMode: 'dinein',
+    items: [
+      { item: findOpenCanteenItem('oc-aloo-paratha'), quantity: 1 },
+      { item: findOpenCanteenItem('oc-filter-coffee'), quantity: 1 },
+    ],
+    priceSnapshot: {
+      subtotal: 90,
+      taxes: 5,
+      packagingCharge: 0,
+      deliveryFee: 0,
+      grandTotal: 95,
+      totalItemCount: 2,
+    },
+    subtotal: 90,
+    taxes: 5,
+    applicableCharges: 0,
+    grandTotal: 95,
+    paymentStatus: 'completed',
+    paymentMethod: 'UPI',
+    orderStatus: 'preparing',
+    pickupOrDeliveryDetails: {
+      tableNumber: 'Table T-04',
+      notes: 'Serve hot with fresh curd and pickle',
+    },
+    createdAt: '2026-10-21T11:32:00.000Z',
+    updatedAt: '2026-10-21T11:32:00.000Z',
+    displayDate: '21 Oct 2026',
+    displayTime: '11:32 AM',
+    thumbnailUrl: '/assets/menu/paneer-paratha.png',
+    itemsSummary: 'Homestyle Aloo Paratha (x1), South Indian Filter Coffee (x1)',
+  },
+  // 2. Order #C1046 — Delivered — Takeaway — ₹126
+  {
+    orderId: 'C1046',
+    userId: 'customer-demo-1',
+    userDisplayName: 'Guest Customer',
+    serviceMode: 'takeaway',
+    items: [
+      { item: findOpenCanteenItem('oc-steamed-idli'), quantity: 2 },
+      { item: findOpenCanteenItem('oc-masala-chai'), quantity: 1 },
+    ],
+    priceSnapshot: {
+      subtotal: 120,
+      taxes: 6,
+      packagingCharge: 0,
+      deliveryFee: 0,
+      grandTotal: 126,
+      totalItemCount: 3,
+    },
+    subtotal: 120,
+    taxes: 6,
+    applicableCharges: 0,
+    grandTotal: 126,
+    paymentStatus: 'completed',
+    paymentMethod: 'UPI',
+    orderStatus: 'delivered',
+    pickupOrDeliveryDetails: {
+      pickupTimeEstimate: 'Counter 1 • Ready for Pickup',
+      notes: 'Pack chutney separately',
+    },
+    createdAt: '2026-10-20T17:15:00.000Z',
+    updatedAt: '2026-10-20T17:35:00.000Z',
+    displayDate: '20 Oct 2026',
+    displayTime: '05:15 PM',
+    thumbnailUrl: '/assets/menu/idli-sambar.png',
+    itemsSummary: 'Steamed Idli Platter (x2), Ginger Cardamom Chai (x1)',
+  },
+  // 3. Order #C1045 — Delivered — Delivery — ₹177
+  {
+    orderId: 'C1045',
+    userId: 'customer-demo-1',
+    userDisplayName: 'Guest Customer',
+    serviceMode: 'delivery',
+    items: [
+      { item: findOpenCanteenItem('oc-crispy-dosa'), quantity: 1 },
+      { item: findOpenCanteenItem('oc-sweet-jalebi'), quantity: 1 },
+      { item: findOpenCanteenItem('oc-filter-coffee'), quantity: 1 },
+    ],
+    priceSnapshot: {
+      subtotal: 145,
+      taxes: 7,
+      packagingCharge: 10,
+      deliveryFee: 15,
+      grandTotal: 177,
+      totalItemCount: 3,
+    },
+    subtotal: 145,
+    taxes: 7,
+    applicableCharges: 25,
+    grandTotal: 177,
+    paymentStatus: 'completed',
+    paymentMethod: 'UPI',
+    orderStatus: 'delivered',
+    pickupOrDeliveryDetails: {
+      deliveryAddress: 'Aryabhatta Hostel, Block B, Room 304',
+      contactNumber: '+91 98765 43210',
+      notes: 'Call on arrival at hostel gate',
+    },
+    createdAt: '2026-10-19T13:10:00.000Z',
+    updatedAt: '2026-10-19T13:42:00.000Z',
+    displayDate: '19 Oct 2026',
+    displayTime: '01:10 PM',
+    thumbnailUrl: '/assets/menu/masala-dosa.png',
+    itemsSummary: 'Crispy Butter Masala Dosa (x1), Hot Saffron Jalebi (x1), South Indian Filter Coffee (x1)',
+  },
+];
 
 /**
  * The 12 approved seed orders for Campora Café customer demonstration.

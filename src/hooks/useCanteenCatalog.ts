@@ -25,13 +25,13 @@ export interface UseCanteenCatalogResult {
  */
 export function useCanteenCatalog(): UseCanteenCatalogResult {
   const { config } = useCanteen();
-  const operatorId = config?.identity?.id || 'campora-cafe';
+  const operatorId = config?.identity?.id || 'open-canteen';
 
   // Seed initial state synchronously with the matching default or empty catalog
   // to prevent unnecessary layout shift on first mount and prevent cross-operator bleed.
   const [catalog, setCatalog] = useState<CanteenCatalog>(() => {
-    if (operatorId === 'campora-cafe') return CAMPORA_CATALOG;
     if (operatorId === 'open-canteen') return OPEN_CANTEEN_CATALOG;
+    if (operatorId === 'campora-cafe') return CAMPORA_CATALOG;
     return createEmptyCatalog(operatorId);
   });
   const [loading, setLoading] = useState(false);

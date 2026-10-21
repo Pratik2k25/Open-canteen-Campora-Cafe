@@ -28,7 +28,7 @@ export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, descrip
         {/* Content */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="w-14 h-14 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-400 mb-3">
-            <span className="text-xl font-bold">CC</span>
+            <span className="text-xl font-bold">OC</span>
           </div>
           <h2 className="text-base font-bold text-neutral-800">{title}</h2>
           <p className="text-xs text-neutral-500 mt-1.5 max-w-xs leading-relaxed">

@@ -1,6 +1,6 @@
 import type { IOrderAdapter, PlaceOrderParams } from './types.ts';
 import type { Order, PaymentStatus } from '../types/index.ts';
-import { CAMPORA_SEED_ORDERS } from '../data/mock/index.ts';
+import { CAMPORA_SEED_ORDERS, OPEN_CANTEEN_SEED_ORDERS } from '../data/mock/index.ts';
 import {
   STORAGE_KEYS,
   LEGACY_STORAGE_KEYS,
@@ -24,7 +24,7 @@ export class MockOrderAdapter implements IOrderAdapter {
   }
 
   private readStorageOrders(operatorId: string): Order[] {
-    const id = operatorId || 'campora-cafe';
+    const id = operatorId || 'open-canteen';
     const fallback = id === 'campora-cafe' ? CAMPORA_SEED_ORDERS : [];
     const storage = this.getStorage();
 
@@ -46,7 +46,7 @@ export class MockOrderAdapter implements IOrderAdapter {
   }
 
   private writeStorageOrders(operatorId: string, orders: Order[]): void {
-    const id = operatorId || 'campora-cafe';
+    const id = operatorId || 'open-canteen';
     const storage = this.getStorage();
     if (!storage) return;
 
@@ -116,7 +116,7 @@ export class MockOrderAdapter implements IOrderAdapter {
 
       // Derive customer name from submitted parameter, auth user, or clean fallback
       const submittedName = params.customerName?.trim();
-      const defaultFallbackName = operatorId === 'campora-cafe' ? 'Pratik Kumar' : 'Guest Customer';
+      const defaultFallbackName = 'Guest Customer';
       const userDisplayName = submittedName || user?.displayName || defaultFallbackName;
 
       // Determine realistic demo payment status
@@ -193,7 +193,7 @@ export class MockOrderAdapter implements IOrderAdapter {
   }
 
   public async restoreSeedOrders(operatorId: string): Promise<Order[]> {
-    const id = operatorId || 'campora-cafe';
+    const id = operatorId || 'open-canteen';
     const seeds = id === 'campora-cafe' ? CAMPORA_SEED_ORDERS : [];
     this.writeStorageOrders(id, seeds);
     return seeds;

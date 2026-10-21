@@ -244,31 +244,59 @@ Stage 1: Core Customer PWA & White-Label Foundation
 
 ---
 
-## 9. Subsequent Stage 1 Backlog Sequence
+## 9. Step 1.9 Implementation Status (COMPLETED)
 
-### Step 1.9 — PWA Finalization & Quality Assurance [NEXT MILESTONE]
-- Service worker precaching and offline fallback screen.
-- Web app manifest verification for installability.
-- Multi-viewport responsive audit (360px to 430px mobile viewports).
-- End-to-end regression test suite covering full customer journey.
+### Status Summary
+- **Step 1.9 Status**: **COMPLETE** (October 2026)
+- **Primary Objective**: Finalized Open Canteen Stage 1 as a reliable, installable, responsive, offline-resilient, independent Customer Food Ordering PWA.
+- **PWA Configuration Audit (Task 1.9.1)**: Validated `vite.config.ts`, `index.html`, manifest metadata (`name`, `short_name`, `description`, `start_url: '/'`, `scope: '/'`, `display: 'standalone'`), theme colors, and icons across Chromium, Safari, and Desktop environments.
+- **Independent Canteen Branding (Task 1.9.2)**: Build-time manifest and runtime meta tags dynamically resolve active deployment branding. Generated dual asset packages: approved Campora Café assets (`/icons/campora/` and root `/pwa-*.png`) and neutral Open Canteen assets (`/icons/neutral/`) to guarantee non-Campora deployments never display Campora-specific assets.
+- **Service Worker & Bounded Caching (Task 1.9.3)**: Workbox precaches critical application-shell assets (HTML, split JS bundles, CSS, 3D vessels, menu photos, UI icons). Precache is bounded at ~9.8 MB (127 entries), strictly excluding ~50 MB raw designer videos in `assets/aistudio/**`. Runtime caching applies `StaleWhileRevalidate` and `CacheFirst` strategies to Google Fonts. Private customer data and credentials are never placed in public caches.
+- **Offline Experience & Transparent Demo Boundaries (Task 1.9.4)**: Full client-side navigation (Home, Menu, Cart, Orders, Order Details, Profile, Address Book) functions offline. Accessible `OfflineIndicator` status pill (`role="status"`, `aria-live="polite"`) alerts users. Transparent disclaimers clarify that mock orders save locally to `localStorage` without communicating with a physical kitchen until Stage 3 backend synchronization is implemented.
+- **Controlled PWA Update Lifecycle (Task 1.9.5)**: Switched from automatic reload to controlled `registerType: 'prompt'`. Implemented `PwaUpdatePrompt` with accessible "Update Now" and "Later" actions. Crucially, the prompt is suppressed during active Checkout to avoid interrupting order submission or wiping form notes.
+- **PWA Installation Readiness (Task 1.9.6)**: Verified Chromium `beforeinstallprompt` flow and iOS Safari "Add to Home Screen" instructions in `PWAInstallButton.tsx`. Documented strict production HTTPS requirements and localhost development exception.
+- **Responsive & Safe-Area Ergonomics (Task 1.9.7)**: Audited layouts at 360px (compact Android), 390px (standard iPhone), 430px (large mobile), and desktop responsive shells. Fixed safe-area bottom insets (`env(safe-area-inset-bottom)`) on sticky checkout action bars, cart summary bars, and bottom navigation.
+- **Accessibility Quality Gate (Task 1.9.8)**: Semantic headings (`h1`–`h3`), touch targets >= 44x44px, accessible button labels, dialog focus trapping via `useAccessibleDialog`, `Escape` key dismissal, focus restoration, screen reader announcements on offline/update events, and `prefers-reduced-motion` compliance.
+- **Performance & Code Splitting (Task 1.9.9)**: Code-split production chunks (`vendor-react`, `vendor-libs`, `index-*.js`). Main application bundle dropped from 1,096 kB to **272 kB**, accelerating initial parsing and main-thread responsiveness.
+- **Security & Data Integrity (Task 1.9.10)**: Confirmed zero production secrets in code or `.env`. Verified demo payment labels ("Demo UPI (Simulated)", "Cash at Counter (Demo)", "Cash on Delivery (Demo)"). Customer notes are rendered strictly as text without HTML injection risks. Browser storage clearing is handled gracefully.
+- **Customer Journey Regression (Task 1.9.11)**: Executed browser tests for Journey A (Dine-in), Journey B (Takeaway), Journey C (Delivery), Journey D (Profile & Address Book), Journey E (Operator Isolation), Journey F (Offline & Update), and Journey G (Failure cases).
+- **Automated Regression Suite (Task 1.9.12)**: Expanded unit test suite to **130 passing unit tests across 16 files** (0 failures). Added `pwaAndDeploymentFunctional.test.ts` covering manifest resolution, branding presets, offline persistence, update lifecycle, and storage partitioning.
+- **Deployment Documentation (Task 1.9.13)**: Authored comprehensive self-hosted guide in `docs/deployment/self-hosted-guide.md` covering prerequisites, local dev, production build, HTTPS, Nginx/Caddy/Vercel SPA rewrites, icon preparation, environment variables, offline limits, and future Stage 2/3 boundaries.
+
+### Completed Tasks Breakdown
+
+| Task ID | Task Description | Target Files | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.9.1** | PWA configuration & manifest audit | `vite.config.ts`, `index.html`, `dist/manifest.webmanifest` | **Complete** | Standalone mode, start_url '/', valid icons, dynamic theme colors. |
+| **1.9.2** | Independent canteen branding & neutral icons | `scripts/generate-all-icons.mjs`, `public/icons/**`, `vite.config.ts` | **Complete** | Neutral Open Canteen icons generated; build-time manifest and HTML branding dynamically adapt to operator ID. |
+| **1.9.3** | Workbox precaching & bounded caching policies | `vite.config.ts`, `dist/sw.js` | **Complete** | Bounded precache ~9.8 MB (127 entries); excludes raw aistudio video; Google fonts cached. |
+| **1.9.4** | Offline experience & transparent demonstration bounds | `src/components/OfflineIndicator.tsx`, `src/pages/CheckoutPage.tsx` | **Complete** | Accessible role="status" and aria-live="polite"; offline orders persist locally with clear demo disclaimer. |
+| **1.9.5** | Controlled PWA update lifecycle | `src/components/PwaUpdatePrompt.tsx`, `vite.config.ts`, `src/components/CustomerNavigationShell.tsx` | **Complete** | Controlled prompt with Update/Later; checkout suppression; skipWaiting activation. |
+| **1.9.6** | PWA install verification & iOS instructions | `src/components/PWAInstallButton.tsx`, `src/hooks/usePWAInstall.ts` | **Complete** | Dynamic canteen app name in install dialog; accessible modal ARIA roles. |
+| **1.9.7** | Responsive viewports & safe-area insets | `src/components/BottomNavigation.tsx`, `src/pages/CheckoutPage.tsx`, `src/pages/CartPage.tsx`, `src/components/CustomerNavigationShell.tsx` | **Complete** | Safe-area padding `max(0.75rem, env(safe-area-inset-bottom))` on all sticky bars; verified at 360px, 390px, 430px. |
+| **1.9.8** | Accessibility audit & WCAG compliance | Multiple components | **Complete** | Focus trapping, focus restoration, ARIA status announcements, contrast, reduced motion. |
+| **1.9.9** | Bundle performance & code splitting | `vite.config.ts` | **Complete** | Vendor chunking; main JS bundle reduced from 1.09 MB to 272 KB. |
+| **1.9.10** | Security boundaries & data integrity | `src/adapters/mockOrderAdapter.ts`, `src/pages/CheckoutPage.tsx` | **Complete** | Zero secrets, strict operator storage isolation, HTML sanitization, demo payment semantics. |
+| **1.9.11** | Customer journey regression | Live browser execution | **Complete** | Verified Journeys A through G with browser recordings and screenshot evidence. |
+| **1.9.12** | Automated regression test suite | `src/adapters/pwaAndDeploymentFunctional.test.ts` | **Complete** | 130 passing unit tests across 16 files (11 new Step 1.9 functional tests). |
+| **1.9.13** | Self-hosted deployment documentation | `docs/deployment/self-hosted-guide.md` | **Complete** | Full operator documentation for self-hosting, HTTPS, SPA rewrites, icons, and offline boundaries. |
 
 ---
 
-## 6. Step 1.1 Completion Checklist & Sign-Off
+## 10. Stage 1 Final Acceptance Gate
 
-- [x] **Project Structure & Dependencies Documented**: React 19, TypeScript 7, Vite 8, Tailwind v4, PWA precaching mapped in [D1](file:///f:/Open-canteen-Campora-Cafe/docs/development/stage-1/step-1.1-codebase-audit.md).
-- [x] **Customer Screens & Routes Inventoried**: 4 verified production screens, 9 clean placeholder routes mapped in [D2](file:///f:/Open-canteen-Campora-Cafe/docs/development/stage-1/feature-verification.md).
-- [x] **Feature Verification Matrix Completed**: Home Case 3, 3D cart, VEG reveal, premium navigation, and skeleton system verified with screenshots.
-- [x] **Branding Dependencies Identified**: All 19 hardcoded strings, assets, and storage keys cataloged in [D3](file:///f:/Open-canteen-Campora-Cafe/docs/development/stage-1/branding-inventory.md).
-- [x] **Data Flow & Mock Sources Mapped**: Storage keys, context states, and catalog arrays mapped for Step 1.3 migration.
-- [x] **Approved UI & Motion Preserved**: Layout geometries, aspect ratios, and animation curves confirmed 100% intact.
-- [x] **Technical Risks Evaluated**: Mitigations for PWA manifests, code splitting, and storage keys detailed in [D4](file:///f:/Open-canteen-Campora-Cafe/docs/development/stage-1/risk-register.md).
-- [x] **No Code/Architecture Rebuilding Conducted**: Pure audit, verification, and structured planning only.
-- [x] **Stage 1.2 Backlog Ready for Approval**: 7 atomic tasks scheduled with acceptance criteria.
+- [x] **Core Customer Journeys Complete**: Dine-in, Takeaway, and Delivery ordering workflows fully functional with mock persistence.
+- [x] **PWA Installability & Service Worker**: Production build outputs valid manifest, controlled update service worker, and bounded precache.
+- [x] **Visual Design Locked & Preserved**: Approved Campora Café headers, 3D vessels, 50px BottomNav geometry, VEG radial transitions, and brand palettes preserved 100%.
+- [x] **Independent Canteen White-Labeling**: Configurable without source code modifications; neutral fallbacks prevent cross-canteen asset leakage.
+- [x] **Offline Resilience & Demo Bounds**: Full offline navigation and local order storage with transparent demonstration disclaimers.
+- [x] **Accessibility & Safe-Area Ergonomics**: WCAG 2.2 AA compliant modal dialogs, keyboard traps, screen reader live regions, and iOS safe areas.
+- [x] **Production Bundle & Code Quality**: 130 passing unit tests across 16 files, clean `tsc --noEmit`, clean Vite production build.
+- [x] **Deployment Documentation**: Complete operator guide authored in `docs/deployment/self-hosted-guide.md`.
 
 ---
 
-### Exit Gate
-With all 5 deliverables completed and stored in [`docs/development/stage-1/`](file:///f:/Open-canteen-Campora-Cafe/docs/development/stage-1/), **Step 1.1 is complete**.
+### Milestone Sign-Off Recommendation
+**STAGE 1 · STEP 1.9 — READY FOR OWNER REVIEW**  
+*Pending owner visual approval on newly added Checkout, Confirmation, Order Details, and Address Book screens.*
 
-Ready to begin **Stage 1, Step 1.2: Centralized Canteen Branding Architecture & Rebranding** upon user confirmation.

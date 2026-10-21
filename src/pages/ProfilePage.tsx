@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Check, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Plus, Edit2, Trash2, Check, AlertCircle, ArrowLeft, Store, Info, FileText } from 'lucide-react';
 import { useCanteen } from '../context/CanteenContext.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 import type { SavedAddress } from '../types/index.ts';
@@ -19,6 +19,8 @@ import { mockProfileAdapter } from '../adapters/mockProfileAdapter.ts';
 import { ProfilePageSkeleton } from '../components/skeleton/ProfilePageSkeleton.tsx';
 import { usePageReadiness } from '../hooks/usePageReadiness.ts';
 import { useAccessibleDialog } from '../utils/useAccessibleDialog.ts';
+import { OpenCanteenBrandMark } from '../components/OpenCanteenBrandMark.tsx';
+import { AccountPrivacyView } from '../components/AccountPrivacyView.tsx';
 
 const isDialablePhone = (phone?: string): boolean => {
   if (!phone) return false;
@@ -67,7 +69,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     };
   });
 
-  const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
+  const [searchParams] = useSearchParams();
+  const [activeSheet, setActiveSheet] = useState<ActiveSheet>(() => {
+    const sheetParam = searchParams.get('sheet');
+    if (
+      sheetParam === 'addressBook' ||
+      sheetParam === 'editProfile' ||
+      sheetParam === 'helpSupport' ||
+      sheetParam === 'notifications' ||
+      sheetParam === 'appearance' ||
+      sheetParam === 'accountPrivacy' ||
+      sheetParam === 'aboutCanteen' ||
+      sheetParam === 'aboutCampora'
+    ) {
+      return sheetParam as ActiveSheet;
+    }
+    return null;
+  });
   const [editName, setEditName] = useState(profile.displayName);
   const [editEmail, setEditEmail] = useState(profile.email);
   const [editPhone, setEditPhone] = useState(profile.phoneNumber);
@@ -387,7 +405,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             {/* Right-Side Approved Chef Hat, Noodle Bowl & Coffee Cup Illustration */}
             <img
               src="/assets/profile/hero-food-illustration.png"
-              alt="Campora Café noodles bowl, coffee cup, and chef hat artwork"
+              alt="Open Canteen noodles bowl, coffee cup, and chef hat artwork"
               referrerPolicy="no-referrer"
               width="144"
               height="98"
@@ -790,32 +808,84 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </div>
             <div className="border-b border-[#F1F5F9] ml-[50px]" />
 
-            {/* Row 1: About Canteen */}
+            {/* Row 1: About Your Canteen */}
             <button
               type="button"
-              onClick={() => setActiveSheet('aboutCanteen')}
+              onClick={() => navigate('/profile/about-canteen')}
               className="w-full py-2 flex items-center justify-between text-left hover:bg-neutral-50/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-[38px] h-[38px] rounded-full bg-[#EBF5FF] flex items-center justify-center shrink-0">
-                  {/* Blue Info Circle Icon */}
-                  <svg viewBox="0 0 24 24" className="w-[19px] h-[19px]" fill="none">
-                    <circle cx="12" cy="12" r="8.2" stroke="#0679FC" strokeWidth="1.8" />
-                    <path
-                      d="M12 11.2v4.8"
-                      stroke="#0679FC"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="12" cy="8.2" r="1.1" fill="#0679FC" />
-                  </svg>
+                  <Store className="w-[19px] h-[19px] text-[#0679FC]" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-[13.5px] font-bold text-[#111827] leading-snug">
-                    {config.content.aboutTitle}
+                    About Your Canteen
                   </div>
                   <div className="text-[11.5px] font-normal text-[#64748B] mt-0.5">
-                    Our story, values and more
+                    Our story, location &amp; details
+                  </div>
+                </div>
+              </div>
+              <svg viewBox="0 0 16 16" className="w-4 h-4 text-[#64748B] shrink-0" fill="none">
+                <path
+                  d="M6 3.5L10.5 8 6 12.5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <div className="border-b border-[#F1F5F9] ml-[50px]" />
+
+            {/* Row 2: About Open Canteen */}
+            <button
+              type="button"
+              onClick={() => navigate('/profile/about-open-canteen')}
+              className="w-full py-2 flex items-center justify-between text-left hover:bg-neutral-50/50 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-[38px] h-[38px] rounded-full bg-[#EBFAF0] flex items-center justify-center shrink-0">
+                  <Info className="w-[19px] h-[19px] text-[#16A34A]" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[13.5px] font-bold text-[#111827] leading-snug">
+                    About Open Canteen
+                  </div>
+                  <div className="text-[11.5px] font-normal text-[#64748B] mt-0.5">
+                    Open-source platform &amp; community
+                  </div>
+                </div>
+              </div>
+              <svg viewBox="0 0 16 16" className="w-4 h-4 text-[#64748B] shrink-0" fill="none">
+                <path
+                  d="M6 3.5L10.5 8 6 12.5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <div className="border-b border-[#F1F5F9] ml-[50px]" />
+
+            {/* Row 3: Legal & Policies */}
+            <button
+              type="button"
+              onClick={() => navigate('/profile/legal')}
+              className="w-full py-2 flex items-center justify-between text-left hover:bg-neutral-50/50 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-[38px] h-[38px] rounded-full bg-[#F3E8FF] flex items-center justify-center shrink-0">
+                  <FileText className="w-[19px] h-[19px] text-[#9333EA]" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[13.5px] font-bold text-[#111827] leading-snug">
+                    Legal &amp; Policies
+                  </div>
+                  <div className="text-[11.5px] font-normal text-[#64748B] mt-0.5">
+                    Privacy, terms &amp; service policies
                   </div>
                 </div>
               </div>
@@ -931,15 +1001,27 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               ref={sheetDialogRef}
               role="dialog"
               aria-modal="true"
-              className="w-full max-w-[430px] bg-white rounded-t-[24px] p-5 shadow-2xl relative"
+              className={`w-full max-w-[430px] rounded-t-[24px] shadow-2xl relative transition-all ${
+                activeSheet === 'accountPrivacy'
+                  ? 'bg-[#070A0F] p-3.5 sm:p-4 max-h-[92vh] overflow-y-auto no-scrollbar border-t border-neutral-800'
+                  : 'bg-white p-5'
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-10 h-1.5 bg-neutral-200 rounded-full mx-auto mb-3" />
+              <div
+                className={`w-10 h-1.5 rounded-full mx-auto mb-3 ${
+                  activeSheet === 'accountPrivacy' ? 'bg-neutral-700' : 'bg-neutral-200'
+                }`}
+              />
               <button
                 type="button"
                 onClick={() => setActiveSheet(null)}
                 aria-label="Close sheet"
-                className="absolute right-4 top-4 p-1.5 rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
+                className={`absolute right-4 top-4 p-1.5 rounded-full transition-colors cursor-pointer z-20 ${
+                  activeSheet === 'accountPrivacy'
+                    ? 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+                    : 'text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100'
+                }`}
               >
                 <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
                   <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -1413,28 +1495,36 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               )}
 
               {activeSheet === 'accountPrivacy' && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-[16px] font-bold text-[#111827]">Account Privacy</h3>
-                  <p className="text-[12.5px] text-[#64748B] leading-relaxed">
-                    {config.content.privacyNotice ??
-                      `Your order history, saved hostel addresses, and dietary preferences are stored solely for fulfilling your ${config.identity.displayName} orders on campus.`}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setActiveSheet(null)}
-                    className="w-full mt-1 py-2.5 rounded-xl bg-[#111827] text-white text-[13px] font-bold cursor-pointer"
-                  >
-                    Got It
-                  </button>
-                </div>
+                <AccountPrivacyView
+                  isSheet
+                  onClose={() => setActiveSheet(null)}
+                  onNavigateSheet={(sheet) => {
+                    if (sheet === 'addressBook') {
+                      setAddressSubView('list');
+                      setDeleteConfirmAddrId(null);
+                    }
+                    setActiveSheet(sheet);
+                  }}
+                />
               )}
 
               {(activeSheet === 'aboutCanteen' || activeSheet === 'aboutCampora') && (
                 <div className="flex flex-col gap-3">
+                  {config.identity.id === 'open-canteen' && (
+                    <div className="mb-0.5">
+                      <OpenCanteenBrandMark variant="full" className="h-8 w-auto" />
+                    </div>
+                  )}
                   <h3 className="text-[16px] font-bold text-[#111827]">{config.content.aboutTitle}</h3>
                   <p className="text-[12.5px] text-[#64748B] leading-relaxed">
                     {config.content.aboutBody}
                   </p>
+                  {config.identity.id !== 'open-canteen' && (
+                    <div className="pt-2.5 mt-1 border-t border-neutral-100 flex items-center justify-between text-[11px] text-[#64748B]">
+                      <span>Platform: Powered by Open Canteen</span>
+                      <OpenCanteenBrandMark variant="icon" className="h-4 w-4" />
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={() => setActiveSheet(null)}

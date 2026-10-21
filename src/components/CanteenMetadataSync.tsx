@@ -62,7 +62,10 @@ export const CanteenMetadataSync: React.FC = () => {
     }
 
     // 6. Favicon Link
-    const iconUrl = config.identity.logoUrl || '/icon.svg';
+    const iconUrl =
+      config.identity.id === 'open-canteen'
+        ? '/assets/branding/open-canteen-icon.png'
+        : config.identity.logoUrl || '/icon.svg';
     const iconLink = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (iconLink) {
       iconLink.setAttribute('href', iconUrl);

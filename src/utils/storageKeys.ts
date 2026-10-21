@@ -211,8 +211,8 @@ export function readScopedOrLegacy<T>(
     }
 
     // 2. Safe Fallbacks:
-    // Only Campora Café (or unpartitioned default) is authorized to inherit legacy campora data
-    const isCamporaCafe = !operatorId || operatorId === 'campora-cafe';
+    // Only Campora Café is authorized to inherit legacy campora data
+    const isCamporaCafe = operatorId === 'campora-cafe';
 
     if (isCamporaCafe) {
       const primary = storage.getItem(baseCanonicalKey);
