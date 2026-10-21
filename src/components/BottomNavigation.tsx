@@ -33,7 +33,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ onNavigate }
     >
       <div className="flex items-center justify-between max-w-[430px] mx-auto w-full pointer-events-auto pl-3 pr-0 gap-2.5">
         {/* GROUP A: Joined Home + Order White Container with Sliding Charcoal Indicator */}
-        <div className="relative flex-1 bg-white rounded-full shadow-[0_4px_18px_rgba(0,0,0,0.08)] border border-neutral-100 p-1 flex items-center justify-between overflow-hidden">
+        <div className="relative flex-1 h-[50px] bg-white rounded-full shadow-[0_4px_18px_rgba(0,0,0,0.08)] border border-neutral-100 p-1 flex items-center justify-between overflow-hidden">
           {/* Shared Sliding Dark Charcoal Indicator */}
           <div
             className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-[#1D2532] shadow-xs pointer-events-none transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
@@ -48,7 +48,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ onNavigate }
             type="button"
             onClick={() => handleNav('/')}
             aria-current={isHomeActive ? 'page' : undefined}
-            className="relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full cursor-pointer transition-colors duration-200 focus:outline-none"
+            className="relative z-10 flex-1 h-full flex items-center justify-center gap-2 px-4 rounded-full cursor-pointer transition-colors duration-200 focus:outline-none"
           >
             {/* Icon slot: Glossy 3D Coral House when active, Outline SVG when inactive */}
             <div className="w-[20px] h-[20px] shrink-0 relative flex items-center justify-center">
@@ -93,7 +93,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ onNavigate }
             type="button"
             onClick={() => handleNav('/orders')}
             aria-current={isOrderActive ? 'page' : undefined}
-            className="relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full cursor-pointer transition-colors duration-200 focus:outline-none"
+            className="relative z-10 flex-1 h-full flex items-center justify-center gap-2 px-4 rounded-full cursor-pointer transition-colors duration-200 focus:outline-none"
           >
             {/* Icon slot: Glossy 3D Amber Bag when active, Outline SVG when inactive */}
             <div className="w-[20px] h-[20px] shrink-0 relative flex items-center justify-center">
@@ -154,7 +154,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ onNavigate }
           type="button"
           onClick={() => handleNav('/profile')}
           aria-label="Profile"
-          className="bg-white rounded-l-full rounded-r-none shadow-[0_4px_18px_rgba(0,0,0,0.08)] border border-r-0 border-neutral-100 pl-4 pr-5 py-2.5 flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer hover:bg-neutral-50 active:scale-[0.98] focus:outline-none"
+          className="h-[50px] bg-white rounded-l-full rounded-r-none shadow-[0_4px_18px_rgba(0,0,0,0.08)] border border-r-0 border-neutral-100 pl-4 pr-5 flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer hover:bg-neutral-50 active:scale-[0.98] focus:outline-none"
         >
           <picture>
             <source srcSet={NAVIGATION_ASSETS.profile3dWebp} type="image/webp" />

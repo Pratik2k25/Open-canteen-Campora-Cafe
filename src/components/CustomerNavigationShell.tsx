@@ -198,13 +198,13 @@ export const CustomerNavigationShell: React.FC<CustomerNavigationShellProps> = (
 
           {/* Approved Left-Edge Attached Floating Coral Home Pill */}
           {/* Anchored to Profile Viewport Shell (Option 2: moves together during page transitions) */}
-          <div className="absolute bottom-4 left-0 right-0 z-30 pointer-events-none flex justify-center">
+          <div className="absolute bottom-2.5 left-0 right-0 z-30 pointer-events-none flex justify-center">
             <div className="w-full max-w-[430px] flex justify-start pointer-events-auto">
               <button
                 type="button"
                 onClick={() => navigate('/')}
                 aria-label="Back to Home"
-                className="bg-[#F05360] hover:bg-[#E14552] active:scale-[0.98] text-white rounded-l-none rounded-r-full pl-3.5 pr-5 py-2.5 flex items-center gap-2 shadow-[0_4px_14px_rgba(240,83,96,0.38)] transition-all cursor-pointer focus:outline-none"
+                className="h-[50px] bg-[#F05360] hover:bg-[#E14552] active:scale-[0.98] text-white rounded-l-none rounded-r-full pl-3.5 pr-5 flex items-center gap-2 shadow-[0_4px_14px_rgba(240,83,96,0.38)] transition-all cursor-pointer focus:outline-none"
               >
                 <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] shrink-0" fill="none">
                   <path

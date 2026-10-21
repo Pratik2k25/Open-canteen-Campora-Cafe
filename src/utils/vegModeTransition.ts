@@ -120,7 +120,7 @@ export function filterMenuItemsForHome(
   criteria: HomeMenuFilterCriteria
 ): MenuItem[] {
   const { searchQuery, selectedCategory, isVegOnly, activeFilters, serviceMode } = criteria;
-  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const trimmedQuery = searchQuery.trim().toLowerCase().replace(/\s+/g, ' ');
 
   return items.filter((item) => {
     // 1. Authoritative availability & active service-mode eligibility
@@ -137,22 +137,32 @@ export function filterMenuItemsForHome(
     }
 
     // 3. Category filter
-    if (selectedCategory !== 'all' && item.categoryId !== selectedCategory) {
+    if (selectedCategory && selectedCategory !== 'all' && item.categoryId !== selectedCategory) {
       return false;
     }
 
-    // 4. Search query filter
+    // 4. Search query filter (matches item name or description)
     if (trimmedQuery) {
-      const matchesName = item.name.toLowerCase().includes(trimmedQuery);
-      const matchesDesc = item.description.toLowerCase().includes(trimmedQuery);
+      const matchesName = (item.name || '').toLowerCase().includes(trimmedQuery);
+      const matchesDesc = (item.description || '').toLowerCase().includes(trimmedQuery);
       if (!matchesName && !matchesDesc) {
         return false;
       }
     }
 
     // 5. Filter chips
-    if (activeFilters.includes('under200') && item.price >= 200) {
+    if (activeFilters.includes('under200') && item.price > 200) {
       return false;
+    }
+
+    if (activeFilters.includes('noPackaging')) {
+      if (serviceMode !== 'dinein') {
+        const explicitZero = (item as any).packagingCharge === 0;
+        const isFactorySealed = item.visualType === 'pepsi-bottle';
+        if (!explicitZero && !isFactorySealed) {
+          return false;
+        }
+      }
     }
 
     return true;

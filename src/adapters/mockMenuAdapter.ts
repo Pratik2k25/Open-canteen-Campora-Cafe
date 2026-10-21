@@ -64,15 +64,15 @@ export class MockMenuAdapter implements IMenuAdapter {
     categoryId?: string
   ): Promise<MenuItem[]> {
     const catalog = await this.getCatalog(operatorId);
-    const normalizedQuery = (query || '').trim().toLowerCase();
+    const normalizedQuery = (query || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
     return catalog.items.filter((item) => {
       const matchesCategory = !categoryId || categoryId === 'all' || item.categoryId === categoryId;
       if (!matchesCategory) return false;
       if (!normalizedQuery) return true;
 
-      const nameMatch = item.name.toLowerCase().includes(normalizedQuery);
-      const descMatch = item.description.toLowerCase().includes(normalizedQuery);
+      const nameMatch = (item.name || '').toLowerCase().includes(normalizedQuery);
+      const descMatch = (item.description || '').toLowerCase().includes(normalizedQuery);
       return nameMatch || descMatch;
     });
   }

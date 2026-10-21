@@ -38,18 +38,34 @@ export const SearchBarAndVeg: React.FC<SearchBarAndVegProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') onSearchChange('');
+          }}
           placeholder="Search for 'Biryani'"
           className="w-full mx-2.5 text-[14px] font-medium text-neutral-800 placeholder:text-[#788492] bg-transparent outline-hidden"
         />
 
-        {/* Right Green Search Icon (as shown in reference screenshot) */}
-        <button
-          type="button"
-          aria-label="Search"
-          className="text-[#0E6E3B] hover:opacity-80 transition shrink-0 cursor-pointer"
-        >
-          <Search className="w-[18px] h-[18px] text-[#0E6E3B]" strokeWidth={2.5} />
-        </button>
+        {/* Right Action: Clear search icon when query is present, else standard green search icon */}
+        {searchQuery ? (
+          <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => onSearchChange('')}
+            className="text-neutral-400 hover:text-neutral-700 transition shrink-0 cursor-pointer p-0.5"
+          >
+            <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor">
+              <path d="M18 6 6 18M6 6l12 12" strokeWidth="2.2" strokeLinecap="round" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label="Search"
+            className="text-[#0E6E3B] hover:opacity-80 transition shrink-0 cursor-pointer"
+          >
+            <Search className="w-[18px] h-[18px] text-[#0E6E3B]" strokeWidth={2.5} />
+          </button>
+        )}
       </div>
 
       {/* VEG Toggle Card */}

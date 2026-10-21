@@ -2,7 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { CanteenCatalog, Category, MenuItem } from '../types/index.ts';
 import { useCanteen } from '../context/CanteenContext.tsx';
 import { mockMenuAdapter } from '../adapters/mockMenuAdapter.ts';
-import { CAMPORA_CATALOG } from '../data/mock/index.ts';
+import {
+  CAMPORA_CATALOG,
+  OPEN_CANTEEN_CATALOG,
+  createEmptyCatalog,
+} from '../data/mock/index.ts';
 
 export interface UseCanteenCatalogResult {
   catalog: CanteenCatalog;
@@ -23,11 +27,12 @@ export function useCanteenCatalog(): UseCanteenCatalogResult {
   const { config } = useCanteen();
   const operatorId = config?.identity?.id || 'campora-cafe';
 
-  // Seed initial state synchronously with the matching default or Campora catalog
-  // to prevent unnecessary layout shift on first mount.
+  // Seed initial state synchronously with the matching default or empty catalog
+  // to prevent unnecessary layout shift on first mount and prevent cross-operator bleed.
   const [catalog, setCatalog] = useState<CanteenCatalog>(() => {
     if (operatorId === 'campora-cafe') return CAMPORA_CATALOG;
-    return CAMPORA_CATALOG;
+    if (operatorId === 'open-canteen') return OPEN_CANTEEN_CATALOG;
+    return createEmptyCatalog(operatorId);
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);

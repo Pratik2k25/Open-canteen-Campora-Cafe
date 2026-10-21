@@ -19,8 +19,8 @@ Stage 1: Core Customer PWA & White-Label Foundation
 ├── Step 1.1: Codebase Audit [COMPLETED]
 ├── Step 1.2: Centralized Canteen Branding [COMPLETED]
 ├── Step 1.3: TypeScript Domain Models & Mock Data Adapters [COMPLETED]
-├── Step 1.4: Home Page Functional Completion [NEXT MILESTONE]
-├── Step 1.5: Floating Cart & Cart Page
+├── Step 1.4: Home Page Functional Completion [COMPLETED]
+├── Step 1.5: Floating Cart & Cart Page [NEXT MILESTONE]
 ├── Step 1.6: Checkout & Mock Order Placement
 ├── Step 1.7: Orders, Profile & Remaining Customer Pages
 ├── Step 1.8: Animations, Transitions & Loading
@@ -75,17 +75,32 @@ Stage 1: Core Customer PWA & White-Label Foundation
 
 ---
 
-## 4. Subsequent Stage 1 Backlog Sequence
+## 4. Step 1.4 Implementation Status (COMPLETED)
 
-### Step 1.4 — Home Page Functional Completion
-- Verify and polish category carousel interactions and smooth item filtering.
-- Connect search bar to `searchMenuItems` on `mockMenuAdapter` with debounce and live result count.
-- Filter chips (Veg, Non-Veg, Best Sellers, Fast Delivery) dynamic binding with catalog items.
-- Item card interaction (add, increment, decrement) synchronized with CartContext.
-- Empty states for zero-result search and unconfigured canteens.
-- Preserve Case 3 dynamic service mode theme (Mint Green Dine-in, Warm Beige Takeaway, Soft Blue Delivery).
+### Status Summary
+- **Step 1.4 Status**: **COMPLETE** (October 2026)
+- **Search & Sanitization**: Case-insensitive, whitespace-trimmed, partial item name & description matching, inline clear button (`✕`), and `Escape` key dismiss.
+- **Category & Filter Chips**: Dynamically binds active categories, active pill highlighting, horizontal carousel scroll. Filter chips (`under200`, `noPackaging`, `vegOnly`) compose cleanly with service-mode packaging rules without fabricating fictitious ranking data.
+- **FoodCard & Cart Integration**: ADD pill and `[-]` `[+]` quantity controls bound to `CartContext`. Operator-neutral SVG placeholder fallback prevents cross-canteen food misrepresentation on broken/missing images.
+- **Operator Catalog Isolation**: Unconfigured operators render clean "Menu coming soon" empty state and never inherit Campora menu items. Runtime operator switching resets category, search, and selected product states cleanly.
+- **Geometry & Alignment Harmonization**: Primary joined Home/Order bottom navigation pill, standalone Profile pill, and Profile page floating "← Home" return pill harmonized to uniform 50 px height and 10 px bottom baseline.
+- **Validation**: 78 unit tests passing across 11 test suites (0 failures). TypeScript typechecks (`tsc --noEmit`) clean (0 errors), production build succeeds with 110 precached PWA entries.
 
-### Step 1.5 — Floating Cart & Cart Page (`/cart`)
+### Completed Tasks Breakdown
+
+| Task ID | Task Description | Target Files | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.4.1** | Search bar functionality & clearing | `src/components/SearchBarAndVeg.tsx`, `src/utils/vegModeTransition.ts`, `src/adapters/mockMenuAdapter.ts` | **Complete** | Case-insensitive partial matching, multi-space collapse, inline `✕` clear, `Escape` key handler. |
+| **1.4.2** | Categories & filter chips composition | `src/components/CategoryCarousel.tsx`, `src/components/FilterChips.tsx`, `src/utils/vegModeTransition.ts` | **Complete** | Dynamic category pills; service-mode aware `noPackaging` fee check; `under200` price check. |
+| **1.4.3** | Food cards & cart synchronization | `src/components/FoodCard.tsx`, `src/context/CartContext.tsx` | **Complete** | Direct `CartContext` ADD and quantity counters; operator-neutral SVG utensil fallback; dynamic service mode theme colors. |
+| **1.4.4** | Loading, empty states & operator independence | `src/pages/HomePage.tsx`, `src/hooks/useCanteenCatalog.ts` | **Complete** | Branded "Menu coming soon" and "No dishes found"; synchronous operator-aware initial state in `useCanteenCatalog`. |
+| **1.4.5** | Automated testing, QA & height alignment | `src/adapters/homePageFunctional.test.ts`, `src/components/BottomNavigation.tsx`, `src/components/CustomerNavigationShell.tsx`, `src/pages/ProfilePage.tsx` | **Complete** | 9 functional test scenarios; Option A 50px navigation height harmonization; mobile browser verified. |
+
+---
+
+## 5. Subsequent Stage 1 Backlog Sequence
+
+### Step 1.5 — Floating Cart & Cart Page (`/cart`) [NEXT MILESTONE]
 - Dedicated full-page cart experience at `/cart` matching approved design.
 - Synchronize floating cart drawer on Home with the full `/cart` page.
 - Bill breakdown (subtotal, taxes, packaging, delivery fee) with real-time recalculation.
@@ -117,7 +132,7 @@ Stage 1: Core Customer PWA & White-Label Foundation
 
 ---
 
-## 4. Step 1.1 Completion Checklist & Sign-Off
+## 6. Step 1.1 Completion Checklist & Sign-Off
 
 - [x] **Project Structure & Dependencies Documented**: React 19, TypeScript 7, Vite 8, Tailwind v4, PWA precaching mapped in [D1](file:///f:/Open-canteen-Campora-Cafe/docs/development/stage-1/step-1.1-codebase-audit.md).
 - [x] **Customer Screens & Routes Inventoried**: 4 verified production screens, 9 clean placeholder routes mapped in [D2](file:///f:/Open-canteen-Campora-Cafe/docs/development/stage-1/feature-verification.md).

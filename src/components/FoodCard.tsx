@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Clock, Plus, Minus } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Clock, Plus, Minus, UtensilsCrossed } from 'lucide-react';
 import type { MenuItem } from '../types/index.ts';
 import { useCart } from '../context/CartContext.tsx';
 import { getServiceTheme } from '../utils/serviceTheme.ts';
@@ -14,6 +14,11 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item, onCardClick }) => {
   const quantity = getItemQuantity(item.id);
   const cardRef = useRef<HTMLDivElement>(null);
   const theme = getServiceTheme(serviceMode);
+  const [hasImgError, setHasImgError] = useState<boolean>(!item.imageUrl);
+
+  useEffect(() => {
+    setHasImgError(!item.imageUrl);
+  }, [item.imageUrl]);
 
   const handleAddClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,14 +43,27 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item, onCardClick }) => {
     >
       {/* Food Image Container (exact 416:172 aspect ratio from approved screenshot) */}
       <div className="relative w-full aspect-[416/172] bg-neutral-100 overflow-hidden">
-        <img
-          src={item.imageUrl}
-          alt={item.name}
-          width="208"
-          height="86"
-          className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-200"
-          loading="lazy"
-        />
+        {!hasImgError && item.imageUrl ? (
+          <img
+            src={item.imageUrl}
+            alt={item.name}
+            width="208"
+            height="86"
+            className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-200"
+            loading="lazy"
+            onError={() => setHasImgError(true)}
+          />
+        ) : (
+          <div
+            role="img"
+            aria-label={`${item.name} placeholder`}
+            className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-neutral-100 via-neutral-50 to-neutral-200/60 text-neutral-400 select-none"
+          >
+            <div className="w-8 h-8 rounded-full bg-white/85 shadow-xs flex items-center justify-center text-neutral-400">
+              <UtensilsCrossed className="w-4 h-4 stroke-[1.8]" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Card Details below image */}

@@ -11,6 +11,7 @@ import { ServiceIncompatibilityModal } from '../components/ServiceIncompatibilit
 import { OfflineIndicator } from '../components/OfflineIndicator.tsx';
 import { VegModeTransitionOverlay } from '../components/animations/VegModeTransition.tsx';
 import { MENU_ITEMS } from '../data/menuData.ts';
+import { useCanteen } from '../context/CanteenContext.tsx';
 import { useCanteenCatalog } from '../hooks/useCanteenCatalog.ts';
 import { useCart } from '../context/CartContext.tsx';
 import { getServiceTheme } from '../utils/serviceTheme.ts';
@@ -36,6 +37,8 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => {
+  const { config } = useCanteen();
+  const operatorId = config?.identity?.id || 'campora-cafe';
   const { isReady, showSkeleton } = usePageReadiness({ pageKey: 'home' });
   const { serviceMode } = useCart();
   const { items: catalogItems, categories: catalogCategories } = useCanteenCatalog();
@@ -43,15 +46,29 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const [vegMachine, setVegMachine] = useState(() =>
-    createInitialVegTransitionState(readCanonicalVegPreference(false))
+    createInitialVegTransitionState(readCanonicalVegPreference(false, undefined, operatorId))
   );
   const [transitionOrigin, setTransitionOrigin] = useState<VegTransitionOrigin | null>(null);
   const [activeFilters, setActiveFilters] = useState<FilterKey[]>(() =>
-    syncVegFilterChip([], readCanonicalVegPreference(false))
+    syncVegFilterChip([], readCanonicalVegPreference(false, undefined, operatorId))
   );
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
+  const prevOperatorRef = useRef(operatorId);
   const timersRef = useRef<number[]>([]);
+
+  // Reset category, search, and dietary state cleanly when canteen operator changes at runtime
+  useEffect(() => {
+    if (prevOperatorRef.current !== operatorId) {
+      setSelectedCategory('all');
+      setSearchQuery('');
+      setSelectedProduct(null);
+      const operatorVeg = readCanonicalVegPreference(false, undefined, operatorId);
+      setVegMachine(createInitialVegTransitionState(operatorVeg));
+      setActiveFilters((prev) => syncVegFilterChip(prev.filter((f) => f !== 'vegOnly'), operatorVeg));
+      prevOperatorRef.current = operatorId;
+    }
+  }, [operatorId]);
 
   const clearTransitionTimers = useCallback(() => {
     timersRef.current.forEach((id) => window.clearTimeout(id));
@@ -115,11 +132,11 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
         }
       }
 
-      writeCanonicalVegPreference(nextVegOnly);
+      writeCanonicalVegPreference(nextVegOnly, undefined, operatorId);
       setActiveFilters((prev) => syncVegFilterChip(prev, nextVegOnly));
       setVegMachine((prev) => beginVegModeTransition(prev, nextVegOnly, prefersReducedMotion));
     },
-    []
+    [operatorId]
   );
 
   const handleToggleVeg = useCallback(
@@ -142,7 +159,7 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
   };
 
   // Filter items using `displayedVegOnly` so the menu grid updates behind the full-screen circular transition
-  const activeItems = catalogItems && catalogItems.length > 0 ? catalogItems : MENU_ITEMS;
+  const activeItems = catalogItems || [];
   const filteredItems = useMemo(() => {
     return filterMenuItemsForHome(activeItems, {
       searchQuery,
@@ -224,7 +241,23 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
             isTransitionActive ? 'pointer-events-none' : ''
           }`}
         >
-          {filteredItems.length > 0 ? (
+          {activeItems.length === 0 ? (
+            <div className="py-20 flex flex-col items-center justify-center text-center px-6">
+              <div className="w-16 h-16 rounded-full bg-[#EBE8FC] flex items-center justify-center text-[#7C3AED] mb-3.5 shadow-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-7 h-7">
+                  <path
+                    d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <h4 className="text-[16px] font-bold text-neutral-800">Menu coming soon</h4>
+              <p className="text-[12.5px] text-neutral-500 mt-1.5 max-w-[260px] leading-relaxed">
+                {config.identity.displayName} is currently updating its menu catalog. Please check back shortly!
+              </p>
+            </div>
+          ) : filteredItems.length > 0 ? (
             <div className="grid grid-cols-2 gap-3" data-testid="home-product-grid">
               {filteredItems.map((item) => (
                 <FoodCard
@@ -255,7 +288,7 @@ export const HomePage: React.FC<HomePageProps> = ({ hideBottomNav = false }) => 
                   }
                   setActiveFilters([]);
                 }}
-                className="mt-3 text-[12px] font-bold text-[#136B3C] hover:underline"
+                className="mt-3 text-[12px] font-bold text-[#136B3C] hover:underline cursor-pointer"
               >
                 Clear all filters
               </button>
