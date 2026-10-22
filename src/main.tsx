@@ -1,6 +1,7 @@
 import './utils/storageMigration.ts';
 import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
+import AppRoot from './AppRoot.tsx';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(<AppRoot />);
+

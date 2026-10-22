@@ -58,6 +58,7 @@ export default defineConfig(() => {
           'assets/branding/open-canteen-logo.png',
           'assets/branding/open-canteen-icon.png',
           'assets/branding/open-canteen-app-icon.png',
+          'assets/animations/open-canteen-splash.mp4',
           'icons/neutral/favicon.ico',
           'icons/neutral/apple-touch-icon.png',
           'icons/neutral/icon.svg',
@@ -97,7 +98,8 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,webp,svg,woff,woff2}'],
+          // mp4 added for the Open Canteen startup splash animation offline support.
+          globPatterns: ['**/*.{js,css,html,ico,png,webp,svg,woff,woff2,mp4}'],
           globIgnores: ['**/assets/aistudio/**', '**/*-source.png', '**/icons/campora/**', '**/assets/brand-logo.png'],
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
           navigateFallback: '/index.html',

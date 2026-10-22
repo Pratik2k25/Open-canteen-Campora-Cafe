@@ -1003,25 +1003,19 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               aria-modal="true"
               className={`w-full max-w-[430px] rounded-t-[24px] shadow-2xl relative transition-all ${
                 activeSheet === 'accountPrivacy'
-                  ? 'bg-[#070A0F] p-3.5 sm:p-4 max-h-[92vh] overflow-y-auto no-scrollbar border-t border-neutral-800'
+                  ? 'bg-[#F5F8FB] p-3.5 sm:p-4 max-h-[92vh] overflow-y-auto no-scrollbar border-t border-neutral-100'
                   : 'bg-white p-5'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
               <div
-                className={`w-10 h-1.5 rounded-full mx-auto mb-3 ${
-                  activeSheet === 'accountPrivacy' ? 'bg-neutral-700' : 'bg-neutral-200'
-                }`}
+                className="w-10 h-1.5 rounded-full mx-auto mb-3 bg-neutral-300"
               />
               <button
                 type="button"
                 onClick={() => setActiveSheet(null)}
                 aria-label="Close sheet"
-                className={`absolute right-4 top-4 p-1.5 rounded-full transition-colors cursor-pointer z-20 ${
-                  activeSheet === 'accountPrivacy'
-                    ? 'text-neutral-400 hover:text-white hover:bg-neutral-800'
-                    : 'text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100'
-                }`}
+                className="absolute right-4 top-4 p-1.5 rounded-full transition-colors cursor-pointer z-20 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-200/60"
               >
                 <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
                   <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
